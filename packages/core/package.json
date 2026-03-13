@@ -8,15 +8,20 @@
     "./prayer-times": "./src/prayer-times.ts",
     "./api-key": "./src/api-key.ts",
     "./domain": "./src/domain.ts",
-    "./constants": "./src/constants.ts"
+    "./constants": "./src/constants.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./db/connection": "./src/db/connection.ts"
   },
   "dependencies": {
     "bcrypt": "5.1.1",
+    "drizzle-orm": "^0.45.1",
     "jose": "5.6.3",
+    "postgres": "^3.4.8",
     "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/bcrypt": "5.0.2",
+    "drizzle-kit": "^0.31.9",
     "typescript": "5.5.4"
   }
 }

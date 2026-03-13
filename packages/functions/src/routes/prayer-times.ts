@@ -21,10 +21,10 @@ prayerTimesRoutes.get(
   apiKeyAuth,
   prayerTimesCache,
   zValidator("query", querySchema),
-  (c) => {
+  async (c) => {
     const mosqueId = c.req.param("id");
     const query = c.req.valid("query");
-    const entries = PrayerTimes.getForMosque(mosqueId, query);
+    const entries = await PrayerTimes.getForMosque(mosqueId, query);
     return c.json({ data: entries });
   }
 );
@@ -33,9 +33,9 @@ prayerTimesRoutes.get(
   "/:id/prayer-times/today",
   apiKeyAuth,
   prayerTimesCache,
-  (c) => {
+  async (c) => {
     const mosqueId = c.req.param("id");
-    const entry = PrayerTimes.getToday(mosqueId);
+    const entry = await PrayerTimes.getToday(mosqueId);
     if (!entry) {
       return c.json({ error: "No prayer times found for today" }, 404);
     }
@@ -50,10 +50,10 @@ prayerTimesRoutes.post(
   jwtAuth,
   requireOwnership(),
   zValidator("json", createPrayerTimes),
-  (c) => {
+  async (c) => {
     const mosqueId = c.req.param("id");
     const data = c.req.valid("json");
-    const entry = PrayerTimes.upsert(mosqueId, data);
+    const entry = await PrayerTimes.upsert(mosqueId, data);
     return c.json(entry, 201);
   }
 );
@@ -63,10 +63,10 @@ prayerTimesRoutes.post(
   jwtAuth,
   requireOwnership(),
   zValidator("json", bulkSchema),
-  (c) => {
+  async (c) => {
     const mosqueId = c.req.param("id");
     const { entries } = c.req.valid("json");
-    const result = PrayerTimes.bulkUpsert(mosqueId, entries);
+    const result = await PrayerTimes.bulkUpsert(mosqueId, entries);
     return c.json({ data: result }, 201);
   }
 );

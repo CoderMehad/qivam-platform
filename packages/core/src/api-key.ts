@@ -1,6 +1,10 @@
 import type { ApiKeyPublic } from "./domain.js";
-import type { ApiKey } from "./domain.js";
-import { apiKeys, generateId, now, sha256 } from "./repository/mock.js";
+import { sha256 } from "./repository/helpers.js";
+import {
+  insertApiKey,
+  getApiKeyByPrefix,
+  getActiveApiKeyByHash,
+} from "./repository/drizzle.js";
 
 function generateRawKey(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -11,50 +15,36 @@ function generateRawKey(): string {
   return key;
 }
 
-function toPublic(key: ApiKey): ApiKeyPublic {
-  const { keyHash: _, ...rest } = key;
-  return rest;
-}
-
 export interface RequestData {
   name: string;
   contactEmail: string;
 }
 
-export function request(
-  data: RequestData
-): { key: string; prefix: string; name: string; isActive: boolean } {
+export async function request(
+  data: RequestData,
+): Promise<{ key: string; prefix: string; name: string; isActive: boolean }> {
   const rawKey = generateRawKey();
   const prefix = rawKey.slice(0, 12);
-  const id = generateId();
 
-  const apiKey: ApiKey = {
-    id,
+  const inserted = await insertApiKey({
     prefix,
     keyHash: sha256(rawKey),
     name: data.name,
     contactEmail: data.contactEmail,
-    rateLimit: 100,
-    isActive: false, // Requires manual approval
-    createdAt: now(),
-  };
-  apiKeys.set(id, apiKey);
+  });
 
-  return { key: rawKey, prefix, name: data.name, isActive: false };
+  return { key: rawKey, prefix, name: inserted.name, isActive: inserted.isActive };
 }
 
-export function getByPrefix(prefix: string): ApiKeyPublic | undefined {
-  const found = Array.from(apiKeys.values()).find((k) => k.prefix === prefix);
-  return found ? toPublic(found) : undefined;
+export async function getByPrefix(
+  prefix: string,
+): Promise<ApiKeyPublic | undefined> {
+  return getApiKeyByPrefix(prefix);
 }
 
-export function validate(
-  rawKey: string
-): { id: string; name: string; rateLimit: number } | undefined {
+export async function validate(
+  rawKey: string,
+): Promise<{ id: string; name: string; rateLimit: number } | undefined> {
   const keyHash = sha256(rawKey);
-  const found = Array.from(apiKeys.values()).find(
-    (k) => k.keyHash === keyHash && k.isActive
-  );
-  if (!found) return undefined;
-  return { id: found.id, name: found.name, rateLimit: found.rateLimit };
+  return getActiveApiKeyByHash(keyHash);
 }

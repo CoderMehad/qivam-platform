@@ -2,7 +2,7 @@ import { hash, compare } from "bcrypt";
 import { SignJWT, jwtVerify } from "jose";
 import type { Admin, AdminPublic } from "./domain.js";
 import { BCRYPT_COST, JWT_EXPIRY } from "./constants.js";
-import { admins, generateId, now } from "./repository/mock.js";
+import { getAdminByEmail, insertAdmin } from "./repository/drizzle.js";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET ?? "dev-secret";
@@ -24,26 +24,28 @@ export interface RegisterData {
 export async function register(
   data: RegisterData
 ): Promise<{ token: string; admin: AdminPublic }> {
-  const existing = Array.from(admins.values()).find(
-    (a) => a.email === data.email
-  );
+  const existing = await getAdminByEmail(data.email);
   if (existing) {
     throw new Error("Email already registered");
   }
 
   const passwordHash = await hash(data.password, BCRYPT_COST);
-  const id = generateId();
-  const admin: Admin = {
-    id,
-    email: data.email,
-    name: data.name,
-    passwordHash,
-    mosqueId: data.mosqueId,
-    createdAt: now(),
-  };
-  admins.set(id, admin);
+  let admin: Admin;
+  try {
+    admin = await insertAdmin({
+      email: data.email,
+      name: data.name,
+      passwordHash,
+      mosqueId: data.mosqueId,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      throw new Error("Email already registered");
+    }
+    throw err;
+  }
 
-  const token = await new SignJWT({ sub: id, mosqueId: data.mosqueId })
+  const token = await new SignJWT({ sub: admin.id, mosqueId: admin.mosqueId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRY)
@@ -56,7 +58,7 @@ export async function login(
   email: string,
   password: string
 ): Promise<{ token: string; admin: AdminPublic } | null> {
-  const admin = Array.from(admins.values()).find((a) => a.email === email);
+  const admin = await getAdminByEmail(email);
   if (!admin) return null;
 
   const valid = await compare(password, admin.passwordHash);
