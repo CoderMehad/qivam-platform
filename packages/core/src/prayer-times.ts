@@ -1,5 +1,9 @@
 import type { PrayerTimeEntry } from "./domain.js";
-import { prayerTimes, generateId, now, today } from "./repository/mock.js";
+import {
+  getPrayerTimes,
+  getTodayPrayerTimes,
+  upsertPrayerTime,
+} from "./repository/drizzle.js";
 
 export interface GetOptions {
   date?: string;
@@ -17,75 +21,33 @@ export interface UpsertData {
   jummah?: string | null;
 }
 
-export function getForMosque(
+export async function getForMosque(
   mosqueId: string,
-  opts: GetOptions = {}
-): PrayerTimeEntry[] {
-  let entries = Array.from(prayerTimes.values())
-    .filter((pt) => pt.mosqueId === mosqueId)
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  if (opts.date) {
-    entries = entries.filter((pt) => pt.date === opts.date);
-  }
-  if (opts.from) {
-    entries = entries.filter((pt) => pt.date >= opts.from!);
-  }
-  if (opts.to) {
-    entries = entries.filter((pt) => pt.date <= opts.to!);
-  }
-
-  return entries;
+  opts: GetOptions = {},
+): Promise<PrayerTimeEntry[]> {
+  return getPrayerTimes(mosqueId, opts);
 }
 
-export function getToday(mosqueId: string): PrayerTimeEntry | undefined {
-  const todayStr = today();
-  return Array.from(prayerTimes.values()).find(
-    (pt) => pt.mosqueId === mosqueId && pt.date === todayStr
-  );
+export async function getToday(
+  mosqueId: string,
+): Promise<PrayerTimeEntry | undefined> {
+  return getTodayPrayerTimes(mosqueId);
 }
 
-export function upsert(
+export async function upsert(
   mosqueId: string,
-  data: UpsertData
-): PrayerTimeEntry {
-  const existing = Array.from(prayerTimes.values()).find(
-    (pt) => pt.mosqueId === mosqueId && pt.date === data.date
-  );
+  data: UpsertData,
+): Promise<PrayerTimeEntry> {
+  return upsertPrayerTime(mosqueId, data);
+}
 
-  if (existing) {
-    const updated: PrayerTimeEntry = {
-      ...existing,
-      ...data,
-      jummah: data.jummah ?? existing.jummah,
-      updatedAt: now(),
-    };
-    prayerTimes.set(existing.id, updated);
-    return updated;
+export async function bulkUpsert(
+  mosqueId: string,
+  entries: UpsertData[],
+): Promise<PrayerTimeEntry[]> {
+  const results: PrayerTimeEntry[] = [];
+  for (const entry of entries) {
+    results.push(await upsert(mosqueId, entry));
   }
-
-  const id = generateId();
-  const timestamp = now();
-  const entry: PrayerTimeEntry = {
-    id,
-    mosqueId,
-    date: data.date,
-    fajr: data.fajr,
-    dhuhr: data.dhuhr,
-    asr: data.asr,
-    maghrib: data.maghrib,
-    isha: data.isha,
-    jummah: data.jummah ?? null,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
-  prayerTimes.set(id, entry);
-  return entry;
-}
-
-export function bulkUpsert(
-  mosqueId: string,
-  entries: UpsertData[]
-): PrayerTimeEntry[] {
-  return entries.map((entry) => upsert(mosqueId, entry));
+  return results;
 }

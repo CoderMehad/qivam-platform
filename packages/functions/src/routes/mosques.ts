@@ -23,9 +23,9 @@ mosqueRoutes.get(
   apiKeyAuth,
   publicCache,
   zValidator("query", listQuery),
-  (c) => {
+  async (c) => {
     const query = c.req.valid("query");
-    const result = Mosque.list(query);
+    const result = await Mosque.list(query);
     return c.json(result);
   }
 );
@@ -35,9 +35,9 @@ mosqueRoutes.get(
   apiKeyAuth,
   publicCache,
   zValidator("query", nearbyQuery),
-  (c) => {
+  async (c) => {
     const query = c.req.valid("query");
-    const result = Mosque.nearby({
+    const result = await Mosque.nearby({
       lat: query.lat,
       lng: query.lng,
       radiusKm: query.radius_km,
@@ -47,9 +47,9 @@ mosqueRoutes.get(
   }
 );
 
-mosqueRoutes.get("/:id", apiKeyAuth, publicCache, (c) => {
+mosqueRoutes.get("/:id", apiKeyAuth, publicCache, async (c) => {
   const id = c.req.param("id");
-  const mosque = Mosque.getByIdOrSlug(id);
+  const mosque = await Mosque.getByIdOrSlug(id);
   if (!mosque) {
     return c.json({ error: "Mosque not found" }, 404);
   }
@@ -64,7 +64,7 @@ mosqueRoutes.post(
   zValidator("json", createMosque),
   async (c) => {
     const data = c.req.valid("json");
-    const mosque = Mosque.create(data);
+    const mosque = await Mosque.create(data);
     return c.json(mosque, 201);
   }
 );
@@ -74,10 +74,10 @@ mosqueRoutes.patch(
   jwtAuth,
   requireOwnership(),
   zValidator("json", updateMosque),
-  (c) => {
+  async (c) => {
     const id = c.req.param("id");
     const data = c.req.valid("json");
-    const mosque = Mosque.update(id, data);
+    const mosque = await Mosque.update(id, data);
     if (!mosque) {
       return c.json({ error: "Mosque not found" }, 404);
     }
@@ -85,9 +85,9 @@ mosqueRoutes.patch(
   }
 );
 
-mosqueRoutes.delete("/:id", jwtAuth, requireOwnership(), (c) => {
+mosqueRoutes.delete("/:id", jwtAuth, requireOwnership(), async (c) => {
   const id = c.req.param("id");
-  const deleted = Mosque.remove(id);
+  const deleted = await Mosque.remove(id);
   if (!deleted) {
     return c.json({ error: "Mosque not found" }, 404);
   }

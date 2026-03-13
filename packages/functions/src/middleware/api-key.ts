@@ -8,7 +8,7 @@ export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
     return c.json({ error: "Missing X-API-Key header" }, 401);
   }
 
-  const result = validate(key);
+  const result = await validate(key);
   if (!result) {
     return c.json({ error: "Invalid or inactive API key" }, 401);
   }

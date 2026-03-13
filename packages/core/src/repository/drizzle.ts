@@ -1,0 +1,449 @@
+import { eq, and, or, gte, lte, sql, asc } from "drizzle-orm";
+import { getDb } from "../db/connection.js";
+import {
+  mosques,
+  admins,
+  prayerTimes,
+  apiKeys,
+} from "../db/schema.js";
+import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, MosqueFacility } from "../domain.js";
+import { decodeCursor, encodeCursor, slugify } from "./helpers.js";
+import { MAX_PAGE_SIZE } from "../constants.js";
+
+// ── Row Mappers ──────────────────────────────────────────────────────────────
+
+function mapMosqueRow(row: typeof mosques.$inferSelect): Mosque {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    address: row.address,
+    city: row.city,
+    postcode: row.postcode,
+    country: row.country,
+    phone: row.phone ?? null,
+    email: row.email ?? null,
+    website: row.website ?? null,
+    lat: row.lat,
+    lng: row.lng,
+    facilities: JSON.parse(row.facilities) as MosqueFacility[],
+    logoUrl: row.logoUrl ?? null,
+    coverUrl: row.coverUrl ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function mapAdminRow(row: typeof admins.$inferSelect): Admin {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    passwordHash: row.passwordHash,
+    mosqueId: row.mosqueId,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function mapPrayerTimeRow(row: typeof prayerTimes.$inferSelect): PrayerTimeEntry {
+  return {
+    id: row.id,
+    mosqueId: row.mosqueId,
+    date: row.date,
+    fajr: row.fajr,
+    dhuhr: row.dhuhr,
+    asr: row.asr,
+    maghrib: row.maghrib,
+    isha: row.isha,
+    jummah: row.jummah ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function mapApiKeyRow(row: typeof apiKeys.$inferSelect): ApiKey {
+  return {
+    id: row.id,
+    prefix: row.prefix,
+    keyHash: row.keyHash,
+    name: row.name,
+    contactEmail: row.contactEmail,
+    rateLimit: row.rateLimit,
+    isActive: row.isActive,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+// ── Mosque Repository ────────────────────────────────────────────────────────
+
+export interface ListMosquesParams {
+  cursor?: string;
+  limit?: number;
+  city?: string;
+}
+
+export async function listMosques(
+  params: ListMosquesParams = {},
+): Promise<{ data: Mosque[]; cursor: string | null; hasMore: boolean }> {
+  const db = getDb();
+  const limit = Math.min(params.limit ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
+
+  const conditions = [];
+
+  if (params.city) {
+    conditions.push(sql`lower(${mosques.city}) = lower(${params.city})`);
+  }
+
+  if (params.cursor) {
+    const decoded = decodeCursor(params.cursor);
+    if (decoded) {
+      conditions.push(
+        sql`(${mosques.createdAt} > ${decoded.createdAt} OR (${mosques.createdAt} = ${decoded.createdAt} AND ${mosques.id} > ${decoded.id}))`,
+      );
+    }
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const rows = await db
+    .select()
+    .from(mosques)
+    .where(whereClause)
+    .orderBy(asc(mosques.createdAt), asc(mosques.id))
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const data = page.map(mapMosqueRow);
+
+  const lastItem = page[page.length - 1];
+  const cursor =
+    lastItem && hasMore
+      ? encodeCursor(lastItem.createdAt.toISOString(), lastItem.id)
+      : null;
+
+  return { data, cursor, hasMore };
+}
+
+export async function getMosqueByIdOrSlug(
+  idOrSlug: string,
+): Promise<Mosque | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(mosques)
+    .where(or(eq(mosques.id, idOrSlug), eq(mosques.slug, idOrSlug)))
+    .limit(1);
+
+  return rows[0] ? mapMosqueRow(rows[0]) : undefined;
+}
+
+export async function nearbyMosques(
+  lat: number,
+  lng: number,
+  radiusKm: number,
+  limit: number,
+): Promise<Array<Mosque & { distance_km: number }>> {
+  const db = getDb();
+  const radiusMeters = radiusKm * 1000;
+
+  const rows = await db.execute(sql`
+    SELECT *,
+      ST_Distance(
+        ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+        ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography
+      ) / 1000.0 AS distance_km
+    FROM mosques
+    WHERE ST_DWithin(
+      ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography,
+      ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+      ${radiusMeters}
+    )
+    ORDER BY distance_km ASC
+    LIMIT ${limit}
+  `);
+
+  return (rows as unknown as Array<typeof mosques.$inferSelect & { distance_km: number }>).map((row) => ({
+    ...mapMosqueRow(row),
+    distance_km: Math.round(Number(row.distance_km) * 100) / 100,
+  }));
+}
+
+export async function insertMosque(data: {
+  name: string;
+  address: string;
+  city: string;
+  postcode: string;
+  country: string;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  lat: number;
+  lng: number;
+  facilities?: MosqueFacility[];
+}): Promise<Mosque> {
+  const db = getDb();
+  const rows = await db
+    .insert(mosques)
+    .values({
+      slug: slugify(data.name),
+      name: data.name,
+      address: data.address,
+      city: data.city,
+      postcode: data.postcode,
+      country: data.country,
+      phone: data.phone ?? null,
+      email: data.email ?? null,
+      website: data.website ?? null,
+      lat: data.lat,
+      lng: data.lng,
+      facilities: JSON.stringify(data.facilities ?? []),
+    })
+    .returning();
+
+  return mapMosqueRow(rows[0]);
+}
+
+export async function updateMosque(
+  id: string,
+  data: {
+    name?: string;
+    address?: string;
+    city?: string;
+    postcode?: string;
+    country?: string;
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+    lat?: number;
+    lng?: number;
+    facilities?: MosqueFacility[];
+    logoUrl?: string | null;
+    coverUrl?: string | null;
+  },
+): Promise<Mosque | undefined> {
+  const db = getDb();
+
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+  if (data.name !== undefined) {
+    updates.name = data.name;
+    updates.slug = slugify(data.name);
+  }
+  if (data.address !== undefined) updates.address = data.address;
+  if (data.city !== undefined) updates.city = data.city;
+  if (data.postcode !== undefined) updates.postcode = data.postcode;
+  if (data.country !== undefined) updates.country = data.country;
+  if (data.phone !== undefined) updates.phone = data.phone;
+  if (data.email !== undefined) updates.email = data.email;
+  if (data.website !== undefined) updates.website = data.website;
+  if (data.lat !== undefined) updates.lat = data.lat;
+  if (data.lng !== undefined) updates.lng = data.lng;
+  if (data.facilities !== undefined)
+    updates.facilities = JSON.stringify(data.facilities);
+  if (data.logoUrl !== undefined) updates.logoUrl = data.logoUrl;
+  if (data.coverUrl !== undefined) updates.coverUrl = data.coverUrl;
+
+  const rows = await db
+    .update(mosques)
+    .set(updates)
+    .where(eq(mosques.id, id))
+    .returning();
+
+  return rows[0] ? mapMosqueRow(rows[0]) : undefined;
+}
+
+export async function deleteMosque(id: string): Promise<boolean> {
+  const db = getDb();
+  const rows = await db
+    .delete(mosques)
+    .where(eq(mosques.id, id))
+    .returning({ id: mosques.id });
+
+  return rows.length > 0;
+}
+
+// ── Admin Repository ─────────────────────────────────────────────────────────
+
+export async function getAdminByEmail(
+  email: string,
+): Promise<Admin | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(admins)
+    .where(eq(admins.email, email))
+    .limit(1);
+
+  return rows[0] ? mapAdminRow(rows[0]) : undefined;
+}
+
+export async function insertAdmin(data: {
+  email: string;
+  name: string;
+  passwordHash: string;
+  mosqueId: string;
+}): Promise<Admin> {
+  const db = getDb();
+  const rows = await db
+    .insert(admins)
+    .values({
+      email: data.email,
+      name: data.name,
+      passwordHash: data.passwordHash,
+      mosqueId: data.mosqueId,
+    })
+    .returning();
+
+  return mapAdminRow(rows[0]);
+}
+
+// ── Prayer Times Repository ─────────────────────────────────────────────────
+
+export interface GetPrayerTimesOpts {
+  date?: string;
+  from?: string;
+  to?: string;
+}
+
+export async function getPrayerTimes(
+  mosqueId: string,
+  opts: GetPrayerTimesOpts = {},
+): Promise<PrayerTimeEntry[]> {
+  const db = getDb();
+
+  const conditions = [eq(prayerTimes.mosqueId, mosqueId)];
+
+  if (opts.date) {
+    conditions.push(eq(prayerTimes.date, opts.date));
+  }
+  if (opts.from) {
+    conditions.push(gte(prayerTimes.date, opts.from));
+  }
+  if (opts.to) {
+    conditions.push(lte(prayerTimes.date, opts.to));
+  }
+
+  const rows = await db
+    .select()
+    .from(prayerTimes)
+    .where(and(...conditions))
+    .orderBy(asc(prayerTimes.date));
+
+  return rows.map(mapPrayerTimeRow);
+}
+
+export async function getTodayPrayerTimes(
+  mosqueId: string,
+): Promise<PrayerTimeEntry | undefined> {
+  const db = getDb();
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const rows = await db
+    .select()
+    .from(prayerTimes)
+    .where(
+      and(eq(prayerTimes.mosqueId, mosqueId), eq(prayerTimes.date, todayStr)),
+    )
+    .limit(1);
+
+  return rows[0] ? mapPrayerTimeRow(rows[0]) : undefined;
+}
+
+export async function upsertPrayerTime(
+  mosqueId: string,
+  data: {
+    date: string;
+    fajr: string;
+    dhuhr: string;
+    asr: string;
+    maghrib: string;
+    isha: string;
+    jummah?: string | null;
+  },
+): Promise<PrayerTimeEntry> {
+  const db = getDb();
+  const now = new Date();
+
+  const rows = await db
+    .insert(prayerTimes)
+    .values({
+      mosqueId,
+      date: data.date,
+      fajr: data.fajr,
+      dhuhr: data.dhuhr,
+      asr: data.asr,
+      maghrib: data.maghrib,
+      isha: data.isha,
+      jummah: data.jummah ?? null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [prayerTimes.mosqueId, prayerTimes.date],
+      set: {
+        fajr: data.fajr,
+        dhuhr: data.dhuhr,
+        asr: data.asr,
+        maghrib: data.maghrib,
+        isha: data.isha,
+        jummah: data.jummah ?? null,
+        updatedAt: now,
+      },
+    })
+    .returning();
+
+  return mapPrayerTimeRow(rows[0]);
+}
+
+// ── API Key Repository ──────────────────────────────────────────────────────
+
+export async function insertApiKey(data: {
+  prefix: string;
+  keyHash: string;
+  name: string;
+  contactEmail: string;
+}): Promise<ApiKey> {
+  const db = getDb();
+  const rows = await db
+    .insert(apiKeys)
+    .values({
+      prefix: data.prefix,
+      keyHash: data.keyHash,
+      name: data.name,
+      contactEmail: data.contactEmail,
+    })
+    .returning();
+
+  return mapApiKeyRow(rows[0]);
+}
+
+export async function getApiKeyByPrefix(
+  prefix: string,
+): Promise<ApiKeyPublic | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(apiKeys)
+    .where(eq(apiKeys.prefix, prefix))
+    .limit(1);
+
+  if (!rows[0]) return undefined;
+  const mapped = mapApiKeyRow(rows[0]);
+  const { keyHash: _, ...pub } = mapped;
+  return pub;
+}
+
+export async function getActiveApiKeyByHash(
+  keyHash: string,
+): Promise<{ id: string; name: string; rateLimit: number } | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(apiKeys)
+    .where(and(eq(apiKeys.keyHash, keyHash), eq(apiKeys.isActive, true)))
+    .limit(1);
+
+  if (!rows[0]) return undefined;
+  return { id: rows[0].id, name: rows[0].name, rateLimit: rows[0].rateLimit };
+}
