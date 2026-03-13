@@ -1,4 +1,4 @@
-import { hash, compare } from "bcrypt";
+import { hash, compare } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import type { Admin, AdminPublic } from "./domain.js";
 import { BCRYPT_COST, JWT_EXPIRY } from "./constants.js";
