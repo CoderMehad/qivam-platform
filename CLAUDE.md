@@ -16,24 +16,24 @@ Masjid directory and prayer times API — SST v2 monorepo.
 ## Project Structure
 
 ```
-sst.config.ts                ← SST v2 app config (wires stacks)
+sst.config.ts                ← SST v2 app config (wires single stack)
 stacks/
-  Database.ts                ← RDS PostgreSQL + VPC + PostGIS
-  Storage.ts                 ← S3 bucket for media
-  Api.ts                     ← API Gateway + Lambda (Hono)
-  Web.ts                     ← Static site for landing page
-packages/api/                ← Hono API (Lambda handler)
+  MainStack.ts               ← Single stack: DB, Storage, API, Web
+packages/core/               ← Domain layer (all business logic)
   drizzle.config.ts          ← Drizzle Kit config
   src/
-    index.ts                 ← App entry + handler export
-    routes/                  ← Route files (one per resource)
-    middleware/              ← Auth, rate limiting, cache headers
-    db/                      ← Drizzle schema, client, migrations
-    lib/                     ← Prayer calculation, geo helpers
+    index.ts                 ← Barrel export for all core modules
+    domain.ts                ← Domain types (PrayerName, MosqueFacility)
+    constants.ts             ← Shared constants
+    types.ts                 ← Hono AppEnv type
+    repositories/            ← Data access layer
+      mock.ts                ← In-memory mock store (swap for Drizzle later)
     schemas/                 ← Zod schemas (validation + OpenAPI)
-packages/core/               ← Shared types between packages
+    middleware/              ← Auth, rate limiting, cache, ownership
+    routes/                  ← Hono route handlers
+packages/functions/          ← Lambda entry points (thin handlers)
   src/
-    index.ts
+    api.ts                   ← Hono app wiring + Lambda handler export
 ```
 
 ## Commands
@@ -48,10 +48,10 @@ npx sst remove             # Tear down all resources
 pnpm typecheck             # Run TypeScript type checking
 ```
 
-Drizzle migrations run from `packages/api/`:
+Drizzle migrations run from `packages/core/`:
 
 ```bash
-cd packages/api
+cd packages/core
 npx drizzle-kit generate   # Generate DB migrations
 npx drizzle-kit migrate    # Apply migrations
 ```
@@ -64,9 +64,14 @@ npx drizzle-kit migrate    # Apply migrations
 - Use Zod for all input validation — never trust raw input
 - Drizzle ORM for all database queries — no raw SQL unless necessary
 
+## Package Architecture
+
+- **`core`**: Domain layer — repositories, adapters, schemas, middleware, routes, services, use cases. All business logic lives here.
+- **`functions`**: Thin Lambda entry points that import from `core`. Each file is a Lambda handler that wires up the app and exports a `handler`.
+
 ## Prayer Calculation
 
-The adhan prayer calculation library will be built custom — do NOT install `adhan` from npm. The custom implementation will live in `packages/api/src/lib/`.
+The adhan prayer calculation library will be built custom — do NOT install `adhan` from npm. The custom implementation will live in `packages/core/src/lib/`.
 
 ## Security Priorities
 
