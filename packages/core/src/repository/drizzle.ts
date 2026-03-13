@@ -26,6 +26,7 @@ function mapMosqueRow(row: typeof mosques.$inferSelect): Mosque {
     website: row.website ?? null,
     lat: row.lat,
     lng: row.lng,
+    timezone: row.timezone,
     facilities: JSON.parse(row.facilities) as MosqueFacility[],
     logoUrl: row.logoUrl ?? null,
     coverUrl: row.coverUrl ?? null,
@@ -188,6 +189,7 @@ export async function insertMosque(data: {
   website?: string | null;
   lat: number;
   lng: number;
+  timezone?: string;
   facilities?: MosqueFacility[];
 }): Promise<Mosque> {
   const db = getDb();
@@ -206,6 +208,7 @@ export async function insertMosque(data: {
         website: data.website ?? null,
         lat: data.lat,
         lng: data.lng,
+        timezone: data.timezone ?? "UTC",
         facilities: JSON.stringify(data.facilities ?? []),
       })
       .returning();
@@ -232,6 +235,7 @@ export async function updateMosque(
     website?: string | null;
     lat?: number;
     lng?: number;
+    timezone?: string;
     facilities?: MosqueFacility[];
     logoUrl?: string | null;
     coverUrl?: string | null;
@@ -254,6 +258,7 @@ export async function updateMosque(
   if (data.website !== undefined) updates.website = data.website;
   if (data.lat !== undefined) updates.lat = data.lat;
   if (data.lng !== undefined) updates.lng = data.lng;
+  if (data.timezone !== undefined) updates.timezone = data.timezone;
   if (data.facilities !== undefined)
     updates.facilities = JSON.stringify(data.facilities);
   if (data.logoUrl !== undefined) updates.logoUrl = data.logoUrl;
@@ -359,7 +364,21 @@ export async function getTodayPrayerTimes(
   mosqueId: string,
 ): Promise<PrayerTimeEntry | undefined> {
   const db = getDb();
-  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // Look up mosque timezone to compute the correct local date
+  const mosqueRows = await db
+    .select({ timezone: mosques.timezone })
+    .from(mosques)
+    .where(eq(mosques.id, mosqueId))
+    .limit(1);
+
+  const tz = mosqueRows[0]?.timezone ?? "UTC";
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   const rows = await db
     .select()

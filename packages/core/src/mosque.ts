@@ -33,6 +33,7 @@ export interface CreateMosqueData {
   website?: string | null;
   lat: number;
   lng: number;
+  timezone?: string;
   facilities?: Mosque["facilities"];
 }
 
@@ -47,6 +48,7 @@ export interface UpdateMosqueData {
   website?: string | null;
   lat?: number;
   lng?: number;
+  timezone?: string;
   facilities?: Mosque["facilities"];
   logoUrl?: string | null;
   coverUrl?: string | null;

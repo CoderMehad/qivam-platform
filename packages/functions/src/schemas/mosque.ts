@@ -22,6 +22,7 @@ export const createMosque = z.object({
   website: z.string().url().nullable().optional(),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
+  timezone: z.string().min(1).max(64).optional(),
   facilities: z.array(facilityEnum).optional(),
 });
 
@@ -40,6 +41,7 @@ export const mosqueResponse = z.object({
   website: z.string().nullable(),
   lat: z.number(),
   lng: z.number(),
+  timezone: z.string(),
   facilities: z.array(facilityEnum),
   logoUrl: z.string().nullable(),
   coverUrl: z.string().nullable(),

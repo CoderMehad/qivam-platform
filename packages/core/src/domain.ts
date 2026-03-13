@@ -23,6 +23,7 @@ export interface Mosque {
   website: string | null;
   lat: number;
   lng: number;
+  timezone: string;
   facilities: MosqueFacility[];
   logoUrl: string | null;
   coverUrl: string | null;

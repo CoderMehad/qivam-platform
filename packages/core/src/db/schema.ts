@@ -30,6 +30,7 @@ export const mosques = pgTable(
     website: varchar("website", { length: 500 }),
     lat: doublePrecision("lat").notNull(),
     lng: doublePrecision("lng").notNull(),
+    timezone: varchar("timezone", { length: 64 }).notNull().default("UTC"),
     facilities: text("facilities").notNull().default("[]"),
     logoUrl: text("logo_url"),
     coverUrl: text("cover_url"),
