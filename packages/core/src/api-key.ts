@@ -26,14 +26,14 @@ export async function request(
   const rawKey = generateRawKey();
   const prefix = rawKey.slice(0, 12);
 
-  await insertApiKey({
+  const inserted = await insertApiKey({
     prefix,
     keyHash: sha256(rawKey),
     name: data.name,
     contactEmail: data.contactEmail,
   });
 
-  return { key: rawKey, prefix, name: data.name, isActive: false };
+  return { key: rawKey, prefix, name: inserted.name, isActive: inserted.isActive };
 }
 
 export async function getByPrefix(

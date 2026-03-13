@@ -30,14 +30,22 @@ export async function register(
   }
 
   const passwordHash = await hash(data.password, BCRYPT_COST);
-  const admin = await insertAdmin({
-    email: data.email,
-    name: data.name,
-    passwordHash,
-    mosqueId: data.mosqueId,
-  });
+  let admin: Admin;
+  try {
+    admin = await insertAdmin({
+      email: data.email,
+      name: data.name,
+      passwordHash,
+      mosqueId: data.mosqueId,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      throw new Error("Email already registered");
+    }
+    throw err;
+  }
 
-  const token = await new SignJWT({ sub: admin.id, mosqueId: data.mosqueId })
+  const token = await new SignJWT({ sub: admin.id, mosqueId: admin.mosqueId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRY)

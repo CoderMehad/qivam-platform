@@ -3,6 +3,7 @@ import {
   getPrayerTimes,
   getTodayPrayerTimes,
   upsertPrayerTime,
+  bulkUpsertPrayerTimes,
 } from "./repository/drizzle.js";
 
 export interface GetOptions {
@@ -45,9 +46,5 @@ export async function bulkUpsert(
   mosqueId: string,
   entries: UpsertData[],
 ): Promise<PrayerTimeEntry[]> {
-  const results: PrayerTimeEntry[] = [];
-  for (const entry of entries) {
-    results.push(await upsert(mosqueId, entry));
-  }
-  return results;
+  return bulkUpsertPrayerTimes(mosqueId, entries);
 }

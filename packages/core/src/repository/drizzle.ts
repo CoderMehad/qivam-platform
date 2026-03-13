@@ -129,10 +129,18 @@ export async function getMosqueByIdOrSlug(
   idOrSlug: string,
 ): Promise<Mosque | undefined> {
   const db = getDb();
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      idOrSlug,
+    );
+  const condition = isUuid
+    ? or(eq(mosques.id, idOrSlug), eq(mosques.slug, idOrSlug))
+    : eq(mosques.slug, idOrSlug);
+
   const rows = await db
     .select()
     .from(mosques)
-    .where(or(eq(mosques.id, idOrSlug), eq(mosques.slug, idOrSlug)))
+    .where(condition)
     .limit(1);
 
   return rows[0] ? mapMosqueRow(rows[0]) : undefined;
@@ -151,11 +159,11 @@ export async function nearbyMosques(
     SELECT *,
       ST_Distance(
         ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
-        ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography
+        ST_SetSRID(ST_MakePoint(${mosques.lng}, ${mosques.lat}), 4326)::geography
       ) / 1000.0 AS distance_km
     FROM mosques
     WHERE ST_DWithin(
-      ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography,
+      ST_SetSRID(ST_MakePoint(${mosques.lng}, ${mosques.lat}), 4326)::geography,
       ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
       ${radiusMeters}
     )
@@ -183,25 +191,32 @@ export async function insertMosque(data: {
   facilities?: MosqueFacility[];
 }): Promise<Mosque> {
   const db = getDb();
-  const rows = await db
-    .insert(mosques)
-    .values({
-      slug: slugify(data.name),
-      name: data.name,
-      address: data.address,
-      city: data.city,
-      postcode: data.postcode,
-      country: data.country,
-      phone: data.phone ?? null,
-      email: data.email ?? null,
-      website: data.website ?? null,
-      lat: data.lat,
-      lng: data.lng,
-      facilities: JSON.stringify(data.facilities ?? []),
-    })
-    .returning();
+  try {
+    const rows = await db
+      .insert(mosques)
+      .values({
+        slug: slugify(data.name),
+        name: data.name,
+        address: data.address,
+        city: data.city,
+        postcode: data.postcode,
+        country: data.country,
+        phone: data.phone ?? null,
+        email: data.email ?? null,
+        website: data.website ?? null,
+        lat: data.lat,
+        lng: data.lng,
+        facilities: JSON.stringify(data.facilities ?? []),
+      })
+      .returning();
 
-  return mapMosqueRow(rows[0]);
+    return mapMosqueRow(rows[0]);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      throw new Error("A mosque with this name (slug) already exists");
+    }
+    throw err;
+  }
 }
 
 export async function updateMosque(
@@ -224,7 +239,7 @@ export async function updateMosque(
 ): Promise<Mosque | undefined> {
   const db = getDb();
 
-  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  const updates: Partial<typeof mosques.$inferInsert> = { updatedAt: new Date() };
 
   if (data.name !== undefined) {
     updates.name = data.name;
@@ -244,13 +259,20 @@ export async function updateMosque(
   if (data.logoUrl !== undefined) updates.logoUrl = data.logoUrl;
   if (data.coverUrl !== undefined) updates.coverUrl = data.coverUrl;
 
-  const rows = await db
-    .update(mosques)
-    .set(updates)
-    .where(eq(mosques.id, id))
-    .returning();
+  try {
+    const rows = await db
+      .update(mosques)
+      .set(updates)
+      .where(eq(mosques.id, id))
+      .returning();
 
-  return rows[0] ? mapMosqueRow(rows[0]) : undefined;
+    return rows[0] ? mapMosqueRow(rows[0]) : undefined;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      throw new Error("A mosque with this name (slug) already exists");
+    }
+    throw err;
+  }
 }
 
 export async function deleteMosque(id: string): Promise<boolean> {
@@ -394,6 +416,56 @@ export async function upsertPrayerTime(
     .returning();
 
   return mapPrayerTimeRow(rows[0]);
+}
+
+export async function bulkUpsertPrayerTimes(
+  mosqueId: string,
+  entries: Array<{
+    date: string;
+    fajr: string;
+    dhuhr: string;
+    asr: string;
+    maghrib: string;
+    isha: string;
+    jummah?: string | null;
+  }>,
+): Promise<PrayerTimeEntry[]> {
+  const db = getDb();
+  return db.transaction(async (tx) => {
+    const results: PrayerTimeEntry[] = [];
+    for (const data of entries) {
+      const now = new Date();
+      const rows = await tx
+        .insert(prayerTimes)
+        .values({
+          mosqueId,
+          date: data.date,
+          fajr: data.fajr,
+          dhuhr: data.dhuhr,
+          asr: data.asr,
+          maghrib: data.maghrib,
+          isha: data.isha,
+          jummah: data.jummah ?? null,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [prayerTimes.mosqueId, prayerTimes.date],
+          set: {
+            fajr: data.fajr,
+            dhuhr: data.dhuhr,
+            asr: data.asr,
+            maghrib: data.maghrib,
+            isha: data.isha,
+            jummah: data.jummah ?? null,
+            updatedAt: now,
+          },
+        })
+        .returning();
+      results.push(mapPrayerTimeRow(rows[0]));
+    }
+    return results;
+  });
 }
 
 // ── API Key Repository ──────────────────────────────────────────────────────

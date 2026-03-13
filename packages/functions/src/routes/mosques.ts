@@ -64,8 +64,16 @@ mosqueRoutes.post(
   zValidator("json", createMosque),
   async (c) => {
     const data = c.req.valid("json");
-    const mosque = await Mosque.create(data);
-    return c.json(mosque, 201);
+    try {
+      const mosque = await Mosque.create(data);
+      return c.json(mosque, 201);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Create failed";
+      if (message.includes("already exists")) {
+        return c.json({ error: message }, 409);
+      }
+      throw err;
+    }
   }
 );
 
@@ -87,9 +95,14 @@ mosqueRoutes.patch(
 
 mosqueRoutes.delete("/:id", jwtAuth, requireOwnership(), async (c) => {
   const id = c.req.param("id");
-  const deleted = await Mosque.remove(id);
-  if (!deleted) {
-    return c.json({ error: "Mosque not found" }, 404);
+  try {
+    const deleted = await Mosque.remove(id);
+    if (!deleted) {
+      return c.json({ error: "Mosque not found" }, 404);
+    }
+    return c.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Delete failed";
+    return c.json({ error: message }, 409);
   }
-  return c.json({ success: true });
 });

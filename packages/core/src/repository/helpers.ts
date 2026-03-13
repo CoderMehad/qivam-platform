@@ -1,9 +1,9 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 // ── ID & Timestamp ───────────────────────────────────────────────────────────
 
 export function generateId(): string {
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 export function now(): string {
@@ -66,6 +66,7 @@ export function decodeCursor(
     const decoded = Buffer.from(cursor, "base64url").toString();
     const [createdAt, id] = decoded.split("|");
     if (!createdAt || !id) return null;
+    if (Number.isNaN(Date.parse(createdAt))) return null;
     return { createdAt, id };
   } catch {
     return null;

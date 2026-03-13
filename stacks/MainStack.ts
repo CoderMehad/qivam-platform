@@ -6,6 +6,11 @@ export function MainStack({ stack }: StackContext) {
   const rds = new RDS(stack, "Database", {
     engine: "postgresql15.5",
     defaultDatabaseName: "openislam",
+    scaling: {
+      autoPause: stack.stage !== "production",
+      minCapacity: "ACU_2",
+      maxCapacity: stack.stage === "production" ? "ACU_16" : "ACU_2",
+    },
   });
 
   const api = new Api(stack, "Api", {

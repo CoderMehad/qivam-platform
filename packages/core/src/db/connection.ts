@@ -12,7 +12,7 @@ export function getDb(): Database {
     if (!connectionString) {
       throw new Error("DATABASE_URL environment variable is not set");
     }
-    const client = postgres(connectionString);
+    const client = postgres(connectionString, { max: 1 });
     db = drizzle(client, { schema });
   }
   return db;

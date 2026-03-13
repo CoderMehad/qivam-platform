@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+
 
 // ── Mosques ──────────────────────────────────────────────────────────────────
 
@@ -91,15 +91,19 @@ export const prayerTimes = pgTable(
 
 // ── API Keys ─────────────────────────────────────────────────────────────────
 
-export const apiKeys = pgTable("api_keys", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  prefix: varchar("prefix", { length: 20 }).notNull().unique(),
-  keyHash: text("key_hash").notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  contactEmail: varchar("contact_email", { length: 255 }).notNull(),
-  rateLimit: integer("rate_limit").notNull().default(100),
-  isActive: boolean("is_active").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    prefix: varchar("prefix", { length: 20 }).notNull().unique(),
+    keyHash: text("key_hash").notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    contactEmail: varchar("contact_email", { length: 255 }).notNull(),
+    rateLimit: integer("rate_limit").notNull().default(100),
+    isActive: boolean("is_active").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("api_keys_key_hash_idx").on(table.keyHash)],
+);
