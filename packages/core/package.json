@@ -1,0 +1,22 @@
+{
+  "name": "@openislam/core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./mosque": "./src/mosque.ts",
+    "./auth": "./src/auth.ts",
+    "./prayer-times": "./src/prayer-times.ts",
+    "./api-key": "./src/api-key.ts",
+    "./domain": "./src/domain.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "dependencies": {
+    "bcrypt": "5.1.1",
+    "jose": "5.6.3",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "5.0.2",
+    "typescript": "5.5.4"
+  }
+}

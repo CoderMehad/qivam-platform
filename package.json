@@ -1,0 +1,14 @@
+{
+  "name": "openislam-platform",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/functions/tsconfig.json"
+  },
+  "devDependencies": {
+    "sst": "2.43.7",
+    "aws-cdk-lib": "2.142.1",
+    "constructs": "10.3.0",
+    "typescript": "5.5.4"
+  }
+}

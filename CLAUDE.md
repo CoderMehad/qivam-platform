@@ -18,22 +18,39 @@ Masjid directory and prayer times API — SST v2 monorepo.
 ```
 sst.config.ts                ← SST v2 app config (wires single stack)
 stacks/
-  MainStack.ts               ← Single stack: DB, Storage, API, Web
-packages/core/               ← Domain layer (all business logic)
-  drizzle.config.ts          ← Drizzle Kit config
+  MainStack.ts               ← Single stack: Api + Bucket (RDS added later)
+packages/core/               ← Pure domain layer (NO Hono, NO HTTP)
   src/
-    index.ts                 ← Barrel export for all core modules
-    domain.ts                ← Domain types (PrayerName, MosqueFacility)
-    constants.ts             ← Shared constants
+    domain.ts                ← Types: Mosque, Admin, PrayerTimeEntry, ApiKey
+    constants.ts             ← MAX_PAGE_SIZE, BCRYPT_COST, JWT_EXPIRY
+    mosque.ts                ← Mosque.list(), .getByIdOrSlug(), .nearby(), .create(), .update(), .remove()
+    auth.ts                  ← Auth.register(), .login(), .verifyToken()
+    prayer-times.ts          ← PrayerTimes.getForMosque(), .getToday(), .upsert(), .bulkUpsert()
+    api-key.ts               ← ApiKey.request(), .getByPrefix(), .validate()
+    repository/
+      mock.ts                ← In-memory Maps + seed data (swap for Drizzle later)
+packages/functions/          ← All HTTP concerns (Hono app, routes, middleware, schemas)
+  src/
     types.ts                 ← Hono AppEnv type
-    repositories/            ← Data access layer
-      mock.ts                ← In-memory mock store (swap for Drizzle later)
-    schemas/                 ← Zod schemas (validation + OpenAPI)
-    middleware/              ← Auth, rate limiting, cache, ownership
-    routes/                  ← Hono route handlers
-packages/functions/          ← Lambda entry points (thin handlers)
-  src/
     api.ts                   ← Hono app wiring + Lambda handler export
+    middleware/              ← admin-auth, api-key, ownership, rate-limit, cache
+    schemas/                 ← Zod schemas for request/response validation
+    routes/                  ← Hono route handlers (health, auth, mosques, prayer-times, api-keys)
+```
+
+## Architecture Rule
+
+> `core` has **ZERO** knowledge of Hono, HTTP, request/response, or middleware.
+> It exports plain functions that accept and return plain TypeScript objects.
+> `functions` owns the Hono app, all routing, all middleware, all request parsing, all response formatting.
+
+## Per-Module Imports
+
+Core uses per-module exports (no barrel `index.ts`):
+```ts
+import * as Mosque from "@openislam/core/mosque";
+import { verifyToken } from "@openislam/core/auth";
+import * as PrayerTimes from "@openislam/core/prayer-times";
 ```
 
 ## Commands
@@ -63,11 +80,6 @@ npx drizzle-kit migrate    # Apply migrations
 - Named exports only (no default exports except config files like `sst.config.ts`)
 - Use Zod for all input validation — never trust raw input
 - Drizzle ORM for all database queries — no raw SQL unless necessary
-
-## Package Architecture
-
-- **`core`**: Domain layer — repositories, adapters, schemas, middleware, routes, services, use cases. All business logic lives here.
-- **`functions`**: Thin Lambda entry points that import from `core`. Each file is a Lambda handler that wires up the app and exports a `handler`.
 
 ## Prayer Calculation
 
