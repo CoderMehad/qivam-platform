@@ -1,19 +1,25 @@
-import postgres from "postgres";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { neon } from "@neondatabase/serverless";
+import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
+import { sql } from "drizzle-orm";
 import * as schema from "./schema.js";
 
-export type Database = PostgresJsDatabase<typeof schema>;
+export type Database = NeonHttpDatabase<typeof schema>;
 
 let db: Database | null = null;
 
 export function getDb(): Database {
   if (!db) {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = process.env.NEON_DATABASE_URL;
     if (!connectionString) {
-      throw new Error("DATABASE_URL environment variable is not set");
+      throw new Error("NEON_DATABASE_URL environment variable is not set");
     }
-    const client = postgres(connectionString, { max: 1 });
+    const client = neon(connectionString);
     db = drizzle(client, { schema });
   }
   return db;
+}
+
+export async function pingDb(): Promise<void> {
+  const db = getDb();
+  await db.execute(sql`SELECT 1`);
 }

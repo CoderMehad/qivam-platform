@@ -1,22 +1,23 @@
-import { Api, Bucket, RDS, StackContext } from "sst/constructs";
+import { Api, Config, StackContext } from "sst/constructs";
 
 export function MainStack({ stack }: StackContext) {
-  const mediaBucket = new Bucket(stack, "MediaBucket");
+  const NEON_DATABASE_URL = new Config.Secret(stack, "NEON_DATABASE_URL");
+  const JWT_SECRET = new Config.Secret(stack, "JWT_SECRET");
 
-  const rds = new RDS(stack, "Database", {
-    engine: "postgresql15.5",
-    defaultDatabaseName: "openislam",
-    scaling: {
-      autoPause: stack.stage !== "production",
-      minCapacity: "ACU_2",
-      maxCapacity: stack.stage === "production" ? "ACU_16" : "ACU_2",
-    },
-  });
+  // TODO: Re-add Bucket for mosque media (S3) when needed
+  // const mediaBucket = new Bucket(stack, "MediaBucket");
 
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        bind: [rds],
+        bind: [NEON_DATABASE_URL, JWT_SECRET],
+        environment: {
+          SST_STAGE: stack.stage,
+        },
+      },
+      throttle: {
+        rate: 100,
+        burst: 200,
       },
     },
     routes: {
@@ -26,8 +27,7 @@ export function MainStack({ stack }: StackContext) {
 
   stack.addOutputs({
     ApiEndpoint: api.url,
-    BucketName: mediaBucket.bucketName,
   });
 
-  return { api, mediaBucket, rds };
+  return { api };
 }
