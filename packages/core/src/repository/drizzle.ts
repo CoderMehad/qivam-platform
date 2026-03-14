@@ -1,14 +1,16 @@
-import { eq, and, or, gte, lte, sql, asc } from "drizzle-orm";
+import { eq, and, or, gte, lte, sql, asc, count } from "drizzle-orm";
 import { getDb } from "../db/connection.js";
 import {
   mosques,
   admins,
   prayerTimes,
   apiKeys,
+  invitations,
 } from "../db/schema.js";
-import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, MosqueFacility } from "../domain.js";
-import { decodeCursor, encodeCursor, slugify } from "./helpers.js";
-import { MAX_PAGE_SIZE } from "../constants.js";
+import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, Invitation, MosqueFacility } from "../domain.js";
+import type { PaginatedResult } from "../domain.js";
+import { slugify } from "./helpers.js";
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../constants.js";
 
 // ── Row Mappers ──────────────────────────────────────────────────────────────
 
@@ -78,16 +80,18 @@ function mapApiKeyRow(row: typeof apiKeys.$inferSelect): ApiKey {
 // ── Mosque Repository ────────────────────────────────────────────────────────
 
 export interface ListMosquesParams {
-  cursor?: string;
+  page?: number;
   limit?: number;
   city?: string;
 }
 
 export async function listMosques(
   params: ListMosquesParams = {},
-): Promise<{ data: Mosque[]; cursor: string | null; hasMore: boolean }> {
+): Promise<PaginatedResult<Mosque>> {
   const db = getDb();
-  const limit = Math.min(params.limit ?? MAX_PAGE_SIZE, MAX_PAGE_SIZE);
+  const limit = Math.min(params.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const page = Math.max(params.page ?? 1, 1);
+  const offset = (page - 1) * limit;
 
   const conditions = [];
 
@@ -95,35 +99,32 @@ export async function listMosques(
     conditions.push(sql`lower(${mosques.city}) = lower(${params.city})`);
   }
 
-  if (params.cursor) {
-    const decoded = decodeCursor(params.cursor);
-    if (decoded) {
-      conditions.push(
-        sql`(${mosques.createdAt} > ${decoded.createdAt} OR (${mosques.createdAt} = ${decoded.createdAt} AND ${mosques.id} > ${decoded.id}))`,
-      );
-    }
-  }
-
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db
-    .select()
-    .from(mosques)
-    .where(whereClause)
-    .orderBy(asc(mosques.createdAt), asc(mosques.id))
-    .limit(limit + 1);
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(mosques)
+      .where(whereClause)
+      .orderBy(asc(mosques.createdAt), asc(mosques.id))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: count() })
+      .from(mosques)
+      .where(whereClause),
+  ]);
 
-  const hasMore = rows.length > limit;
-  const page = hasMore ? rows.slice(0, limit) : rows;
-  const data = page.map(mapMosqueRow);
+  const total = Number(countResult[0].total);
+  const totalPages = Math.ceil(total / limit);
 
-  const lastItem = page[page.length - 1];
-  const cursor =
-    lastItem && hasMore
-      ? encodeCursor(lastItem.createdAt.toISOString(), lastItem.id)
-      : null;
-
-  return { data, cursor, hasMore };
+  return {
+    data: rows.map(mapMosqueRow),
+    page,
+    limit,
+    total,
+    totalPages,
+  };
 }
 
 export async function getMosqueByIdOrSlug(
@@ -331,13 +332,18 @@ export interface GetPrayerTimesOpts {
   date?: string;
   from?: string;
   to?: string;
+  page?: number;
+  limit?: number;
 }
 
 export async function getPrayerTimes(
   mosqueId: string,
   opts: GetPrayerTimesOpts = {},
-): Promise<PrayerTimeEntry[]> {
+): Promise<PaginatedResult<PrayerTimeEntry>> {
   const db = getDb();
+  const limit = Math.min(opts.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const page = Math.max(opts.page ?? 1, 1);
+  const offset = (page - 1) * limit;
 
   const conditions = [eq(prayerTimes.mosqueId, mosqueId)];
 
@@ -351,13 +357,32 @@ export async function getPrayerTimes(
     conditions.push(lte(prayerTimes.date, opts.to));
   }
 
-  const rows = await db
-    .select()
-    .from(prayerTimes)
-    .where(and(...conditions))
-    .orderBy(asc(prayerTimes.date));
+  const whereClause = and(...conditions);
 
-  return rows.map(mapPrayerTimeRow);
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(prayerTimes)
+      .where(whereClause)
+      .orderBy(asc(prayerTimes.date))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: count() })
+      .from(prayerTimes)
+      .where(whereClause),
+  ]);
+
+  const total = Number(countResult[0].total);
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: rows.map(mapPrayerTimeRow),
+    page,
+    limit,
+    total,
+    totalPages,
+  };
 }
 
 export async function getTodayPrayerTimes(
@@ -450,41 +475,39 @@ export async function bulkUpsertPrayerTimes(
   }>,
 ): Promise<PrayerTimeEntry[]> {
   const db = getDb();
-  return db.transaction(async (tx) => {
-    const results: PrayerTimeEntry[] = [];
-    for (const data of entries) {
-      const now = new Date();
-      const rows = await tx
-        .insert(prayerTimes)
-        .values({
-          mosqueId,
-          date: data.date,
-          fajr: data.fajr,
-          dhuhr: data.dhuhr,
-          asr: data.asr,
-          maghrib: data.maghrib,
-          isha: data.isha,
-          jummah: data.jummah ?? null,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: [prayerTimes.mosqueId, prayerTimes.date],
-          set: {
-            fajr: data.fajr,
-            dhuhr: data.dhuhr,
-            asr: data.asr,
-            maghrib: data.maghrib,
-            isha: data.isha,
-            jummah: data.jummah ?? null,
-            updatedAt: now,
-          },
-        })
-        .returning();
-      results.push(mapPrayerTimeRow(rows[0]));
-    }
-    return results;
-  });
+  const now = new Date();
+
+  const values = entries.map((data) => ({
+    mosqueId,
+    date: data.date,
+    fajr: data.fajr,
+    dhuhr: data.dhuhr,
+    asr: data.asr,
+    maghrib: data.maghrib,
+    isha: data.isha,
+    jummah: data.jummah ?? null,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  const rows = await db
+    .insert(prayerTimes)
+    .values(values)
+    .onConflictDoUpdate({
+      target: [prayerTimes.mosqueId, prayerTimes.date],
+      set: {
+        fajr: sql`excluded.fajr`,
+        dhuhr: sql`excluded.dhuhr`,
+        asr: sql`excluded.asr`,
+        maghrib: sql`excluded.maghrib`,
+        isha: sql`excluded.isha`,
+        jummah: sql`excluded.jummah`,
+        updatedAt: sql`excluded.updated_at`,
+      },
+    })
+    .returning();
+
+  return rows.map(mapPrayerTimeRow);
 }
 
 // ── API Key Repository ──────────────────────────────────────────────────────
@@ -524,6 +547,66 @@ export async function getApiKeyByPrefix(
   const { keyHash: _, ...pub } = mapped;
   return pub;
 }
+
+// ── Invitation Repository ────────────────────────────────────────────────────
+
+function mapInvitationRow(row: typeof invitations.$inferSelect): Invitation {
+  return {
+    id: row.id,
+    email: row.email,
+    mosqueId: row.mosqueId,
+    invitedBy: row.invitedBy,
+    token: row.token,
+    expiresAt: row.expiresAt.toISOString(),
+    usedAt: row.usedAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function insertInvitation(data: {
+  email: string;
+  mosqueId: string;
+  invitedBy: string;
+  token: string;
+  expiresAt: Date;
+}): Promise<Invitation> {
+  const db = getDb();
+  const rows = await db
+    .insert(invitations)
+    .values({
+      email: data.email,
+      mosqueId: data.mosqueId,
+      invitedBy: data.invitedBy,
+      token: data.token,
+      expiresAt: data.expiresAt,
+    })
+    .returning();
+
+  return mapInvitationRow(rows[0]);
+}
+
+export async function getInvitationByToken(
+  token: string,
+): Promise<Invitation | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(invitations)
+    .where(eq(invitations.token, token))
+    .limit(1);
+
+  return rows[0] ? mapInvitationRow(rows[0]) : undefined;
+}
+
+export async function markInvitationUsed(id: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(invitations)
+    .set({ usedAt: new Date() })
+    .where(eq(invitations.id, id));
+}
+
+// ── API Key Repository ──────────────────────────────────────────────────────
 
 export async function getActiveApiKeyByHash(
   keyHash: string,

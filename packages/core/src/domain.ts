@@ -65,6 +65,25 @@ export interface ApiKey {
   createdAt: string;
 }
 
+export interface Invitation {
+  id: string;
+  email: string;
+  mosqueId: string;
+  invitedBy: string;
+  token: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export type AdminPublic = Omit<Admin, "passwordHash">;
 
 export type ApiKeyPublic = Omit<ApiKey, "keyHash">;
