@@ -50,7 +50,7 @@ export const mosqueResponse = z.object({
 });
 
 export const listQuery = z.object({
-  cursor: z.string().optional(),
+  page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(20).optional(),
   city: z.string().optional(),
 });

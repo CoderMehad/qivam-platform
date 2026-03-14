@@ -1,9 +1,10 @@
 import { z } from "zod";
 
+const datePattern = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD");
 const timePattern = z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM format");
 
 export const createPrayerTimes = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
+  date: datePattern,
   fajr: timePattern,
   dhuhr: timePattern,
   asr: timePattern,
@@ -31,7 +32,9 @@ export const prayerTimesResponse = z.object({
 });
 
 export const querySchema = z.object({
-  date: z.string().optional(),
-  from: z.string().optional(),
-  to: z.string().optional(),
+  date: datePattern.optional(),
+  from: datePattern.optional(),
+  to: datePattern.optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(20).optional(),
 });
