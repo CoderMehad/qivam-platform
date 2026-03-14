@@ -51,28 +51,6 @@ function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-// ── Cursor Pagination ────────────────────────────────────────────────────────
-
-/** Base64-encode a cursor from createdAt + id */
-export function encodeCursor(createdAt: string, id: string): string {
-  return Buffer.from(`${createdAt}|${id}`).toString("base64url");
-}
-
-/** Decode a cursor back to { createdAt, id } */
-export function decodeCursor(
-  cursor: string,
-): { createdAt: string; id: string } | null {
-  try {
-    const decoded = Buffer.from(cursor, "base64url").toString();
-    const [createdAt, id] = decoded.split("|");
-    if (!createdAt || !id) return null;
-    if (Number.isNaN(Date.parse(createdAt))) return null;
-    return { createdAt, id };
-  } catch {
-    return null;
-  }
-}
-
 // ── Crypto ───────────────────────────────────────────────────────────────────
 
 /** SHA-256 hash for API key storage */

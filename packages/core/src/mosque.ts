@@ -1,4 +1,4 @@
-import type { Mosque } from "./domain.js";
+import type { Mosque, PaginatedResult } from "./domain.js";
 import { MAX_PAGE_SIZE } from "./constants.js";
 import {
   listMosques,
@@ -10,7 +10,7 @@ import {
 } from "./repository/drizzle.js";
 
 export interface ListParams {
-  cursor?: string;
+  page?: number;
   limit?: number;
   city?: string;
 }
@@ -54,11 +54,7 @@ export interface UpdateMosqueData {
   coverUrl?: string | null;
 }
 
-export async function list(params: ListParams = {}): Promise<{
-  data: Mosque[];
-  cursor: string | null;
-  hasMore: boolean;
-}> {
+export async function list(params: ListParams = {}): Promise<PaginatedResult<Mosque>> {
   return listMosques(params);
 }
 

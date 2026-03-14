@@ -1,4 +1,4 @@
-import type { PrayerTimeEntry } from "./domain.js";
+import type { PrayerTimeEntry, PaginatedResult } from "./domain.js";
 import {
   getPrayerTimes,
   getTodayPrayerTimes,
@@ -10,6 +10,8 @@ export interface GetOptions {
   date?: string;
   from?: string;
   to?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface UpsertData {
@@ -25,7 +27,7 @@ export interface UpsertData {
 export async function getForMosque(
   mosqueId: string,
   opts: GetOptions = {},
-): Promise<PrayerTimeEntry[]> {
+): Promise<PaginatedResult<PrayerTimeEntry>> {
   return getPrayerTimes(mosqueId, opts);
 }
 
