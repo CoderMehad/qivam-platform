@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, sql, asc, count } from "drizzle-orm";
+import { eq, and, or, gte, lte, sql, asc, desc, count } from "drizzle-orm";
 import { getDb } from "../db/connection.js";
 import {
   mosques,
@@ -10,6 +10,7 @@ import {
 import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, Invitation, MosqueFacility } from "../domain.js";
 import type { PaginatedResult } from "../domain.js";
 import { slugify } from "./helpers.js";
+import { ConflictError } from "../errors.js";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../constants.js";
 
 // ── Row Mappers ──────────────────────────────────────────────────────────────
@@ -217,7 +218,7 @@ export async function insertMosque(data: {
     return mapMosqueRow(rows[0]);
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("unique")) {
-      throw new Error("A mosque with this name (slug) already exists");
+      throw new ConflictError("A mosque with this name (slug) already exists");
     }
     throw err;
   }
@@ -275,7 +276,7 @@ export async function updateMosque(
     return rows[0] ? mapMosqueRow(rows[0]) : undefined;
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("unique")) {
-      throw new Error("A mosque with this name (slug) already exists");
+      throw new ConflictError("A mosque with this name (slug) already exists");
     }
     throw err;
   }
@@ -607,6 +608,87 @@ export async function markInvitationUsed(id: string): Promise<void> {
 }
 
 // ── API Key Repository ──────────────────────────────────────────────────────
+
+export async function listAllApiKeys(
+  params: { page?: number; limit?: number } = {},
+): Promise<PaginatedResult<ApiKeyPublic>> {
+  const db = getDb();
+  const limit = Math.min(params.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const page = Math.max(params.page ?? 1, 1);
+  const offset = (page - 1) * limit;
+
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(apiKeys)
+      .orderBy(desc(apiKeys.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: count() }).from(apiKeys),
+  ]);
+
+  const total = Number(countResult[0].total);
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: rows.map((row) => {
+      const mapped = mapApiKeyRow(row);
+      const { keyHash: _, ...pub } = mapped;
+      return pub;
+    }),
+    page,
+    limit,
+    total,
+    totalPages,
+  };
+}
+
+export async function updateApiKeyActive(
+  id: string,
+  isActive: boolean,
+): Promise<ApiKeyPublic | undefined> {
+  const db = getDb();
+  const rows = await db
+    .update(apiKeys)
+    .set({ isActive })
+    .where(eq(apiKeys.id, id))
+    .returning();
+
+  if (!rows[0]) return undefined;
+  const mapped = mapApiKeyRow(rows[0]);
+  const { keyHash: _, ...pub } = mapped;
+  return pub;
+}
+
+export async function listInvitations(
+  params: { page?: number; limit?: number } = {},
+): Promise<PaginatedResult<Invitation>> {
+  const db = getDb();
+  const limit = Math.min(params.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+  const page = Math.max(params.page ?? 1, 1);
+  const offset = (page - 1) * limit;
+
+  const [rows, countResult] = await Promise.all([
+    db
+      .select()
+      .from(invitations)
+      .orderBy(desc(invitations.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: count() }).from(invitations),
+  ]);
+
+  const total = Number(countResult[0].total);
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: rows.map(mapInvitationRow),
+    page,
+    limit,
+    total,
+    totalPages,
+  };
+}
 
 export async function getActiveApiKeyByHash(
   keyHash: string,

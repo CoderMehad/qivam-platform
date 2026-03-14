@@ -3,6 +3,8 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { handle } from "hono/aws-lambda";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { AppError } from "@qivam/core/errors";
 import type { AppEnv } from "./types.js";
 import { requestId } from "./middleware/request-id.js";
 import { healthRoutes } from "./routes/health.js";
@@ -12,6 +14,7 @@ import { mosqueAdminRoutes } from "./routes/mosques-admin.js";
 import { prayerTimesRoutes } from "./routes/prayer-times.js";
 import { prayerTimesAdminRoutes } from "./routes/prayer-times-admin.js";
 import { apiKeyRoutes } from "./routes/api-keys.js";
+import { superAdminRoutes } from "./routes/super-admin.js";
 import { log } from "./lib/logger.js";
 
 // Bridge SST Config.Secret values into process.env for core layer
@@ -43,15 +46,12 @@ app.use("*", requestId);
 
 app.onError((err, c) => {
   const reqId = c.get("requestId");
-  const message = err instanceof Error ? err.message : "Internal server error";
 
-  if (message === "Email already registered" || message.includes("already exists")) {
-    return c.json({ error: message, requestId: reqId }, 409);
-  }
-  if (message.includes("not found")) {
-    return c.json({ error: message, requestId: reqId }, 404);
+  if (err instanceof AppError) {
+    return c.json({ error: err.message, requestId: reqId }, err.statusCode as ContentfulStatusCode);
   }
 
+  const message = err instanceof Error ? err.message : "Unknown error";
   log("error", "Unhandled error", { error: message, requestId: reqId });
   return c.json({ error: "Internal server error", requestId: reqId }, 500);
 });
@@ -94,5 +94,10 @@ app.route("/v1", consumerApp);
 app.route("/v1/auth", authRoutes);
 app.route("/v1/mosques", mosqueAdminRoutes);
 app.route("/v1/mosques", prayerTimesAdminRoutes);
+
+// Super admin routes — only available in non-production stages (local dev via `npx sst dev`)
+if (!isProduction) {
+  app.route("/v1/super", superAdminRoutes);
+}
 
 export const handler = handle(app);

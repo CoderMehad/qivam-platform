@@ -6,8 +6,8 @@ Masjid directory and prayer times API — SST v2 monorepo.
 
 - **Infrastructure**: SST v2 (CDK-based), deployed to AWS `eu-west-1`
 - **API**: Hono (runs in a single Lambda function behind API Gateway)
-- **Database**: RDS PostgreSQL 15.5 with PostGIS, managed via Drizzle ORM
-- **Driver**: porsager's `postgres` (TCP over VPC private network)
+- **Database**: Neon PostgreSQL (serverless) with PostGIS, managed via Drizzle ORM
+- **Driver**: `@neondatabase/serverless` (HTTP over public internet)
 - **Validation**: Zod + `@hono/zod-openapi` for OpenAPI spec generation
 - **Auth**: JWT (jose) for admin, vetted API keys for developers
 - **Storage**: S3 for mosque media (logos/covers)

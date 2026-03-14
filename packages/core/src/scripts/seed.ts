@@ -123,10 +123,10 @@ const SEED_ADMIN = {
   mosqueId: MOSQUE_1_ID,
 };
 
-const SEED_API_KEY_RAW = "oi_test_abc123def456";
+const SEED_API_KEY_RAW = "qv_test_abc123def456";
 const SEED_API_KEY = {
   id: "00000000-0000-4000-c000-000000000001",
-  prefix: "oi_test_abc1",
+  prefix: "qv_test_abc1",
   keyHash: sha256(SEED_API_KEY_RAW),
   name: "Dev Test Key",
   contactEmail: "dev@qivam.com",

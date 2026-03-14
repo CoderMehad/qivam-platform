@@ -2,6 +2,7 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import * as Mosque from "@qivam/core/mosque";
 import type { AppEnv } from "../types.js";
 import { apiKeyAuth } from "../middleware/api-key.js";
+import { rateLimiter } from "../middleware/rate-limit.js";
 import { publicCache } from "../middleware/cache.js";
 import {
   mosqueResponse,
@@ -17,7 +18,7 @@ export const mosqueRoutes = new OpenAPIHono<AppEnv>();
 const listRoute = createRoute({
   method: "get",
   path: "/",
-  middleware: [apiKeyAuth, publicCache],
+  middleware: [apiKeyAuth, rateLimiter, publicCache],
   request: {
     query: listQuery,
   },
@@ -44,7 +45,7 @@ mosqueRoutes.openapi(listRoute, async (c) => {
 const nearbyRoute = createRoute({
   method: "get",
   path: "/nearby",
-  middleware: [apiKeyAuth, publicCache],
+  middleware: [apiKeyAuth, rateLimiter, publicCache],
   request: {
     query: nearbyQuery,
   },
@@ -76,7 +77,7 @@ mosqueRoutes.openapi(nearbyRoute, async (c) => {
 const getRoute = createRoute({
   method: "get",
   path: "/{id}",
-  middleware: [apiKeyAuth, publicCache],
+  middleware: [apiKeyAuth, rateLimiter, publicCache],
   request: {
     params: z.object({ id: z.string() }),
   },

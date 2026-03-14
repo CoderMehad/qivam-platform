@@ -13,11 +13,8 @@ export const apiKeyResponse = z.object({
 });
 
 export const apiKeyStatus = z.object({
-  id: z.string().uuid(),
   prefix: z.string(),
   name: z.string(),
-  contactEmail: z.string(),
-  rateLimit: z.number(),
   isActive: z.boolean(),
   createdAt: z.string(),
 });

@@ -33,7 +33,6 @@ export const inviteResponse = z.object({
   id: z.string().uuid(),
   email: z.string(),
   mosqueId: z.string().uuid(),
-  token: z.string(),
   expiresAt: z.string(),
   createdAt: z.string(),
 });

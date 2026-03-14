@@ -3,6 +3,7 @@ import { hash, compare } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import type { Admin, AdminPublic, Invitation } from "./domain.js";
 import { BCRYPT_COST, JWT_EXPIRY } from "./constants.js";
+import { BadRequestError, ConflictError } from "./errors.js";
 import {
   getAdminByEmail,
   insertAdmin,
@@ -38,24 +39,24 @@ export async function register(
   // Validate invitation
   const invitation = await getInvitationByToken(data.inviteToken);
   if (!invitation) {
-    throw new Error("Invalid invitation token");
+    throw new BadRequestError("Invalid invitation token");
   }
   if (invitation.usedAt) {
-    throw new Error("Invitation has already been used");
+    throw new BadRequestError("Invitation has already been used");
   }
   if (new Date(invitation.expiresAt) < new Date()) {
-    throw new Error("Invitation has expired");
+    throw new BadRequestError("Invitation has expired");
   }
   if (invitation.email !== data.email) {
-    throw new Error("Email does not match invitation");
+    throw new BadRequestError("Email does not match invitation");
   }
   if (invitation.mosqueId !== data.mosqueId) {
-    throw new Error("Mosque does not match invitation");
+    throw new BadRequestError("Mosque does not match invitation");
   }
 
   const existing = await getAdminByEmail(data.email);
   if (existing) {
-    throw new Error("Email already registered");
+    throw new ConflictError("Email already registered");
   }
 
   const passwordHash = await hash(data.password, BCRYPT_COST);
@@ -69,7 +70,7 @@ export async function register(
     });
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("unique")) {
-      throw new Error("Email already registered");
+      throw new ConflictError("Email already registered");
     }
     throw err;
   }
@@ -121,20 +122,25 @@ export async function verifyToken(
 
 const INVITE_EXPIRY_HOURS = 72;
 
+export type InvitationPublic = Omit<Invitation, "token">;
+
 export async function createInvitation(
   adminId: string,
   email: string,
   mosqueId: string,
-): Promise<Invitation> {
+): Promise<InvitationPublic> {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + INVITE_EXPIRY_HOURS);
 
-  return insertInvitation({
+  const invitation = await insertInvitation({
     email,
     mosqueId,
     invitedBy: adminId,
     token,
     expiresAt,
   });
+
+  const { token: _, ...publicInvitation } = invitation;
+  return publicInvitation;
 }

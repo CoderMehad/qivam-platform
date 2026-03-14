@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { ApiKeyPublic } from "./domain.js";
 import { sha256 } from "./repository/helpers.js";
 import {
@@ -7,12 +8,8 @@ import {
 } from "./repository/drizzle.js";
 
 function generateRawKey(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let key = "oi_";
-  for (let i = 0; i < 32; i++) {
-    key += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return key;
+  const bytes = randomBytes(24);
+  return "qv_" + bytes.toString("base64url");
 }
 
 export interface RequestData {

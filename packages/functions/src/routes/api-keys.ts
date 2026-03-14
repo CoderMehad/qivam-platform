@@ -50,5 +50,10 @@ apiKeyRoutes.openapi(statusRoute, async (c) => {
   if (!key) {
     return c.json({ error: "API key not found" }, 404);
   }
-  return c.json(key, 200);
+  return c.json({
+    prefix: key.prefix,
+    name: key.name,
+    isActive: key.isActive,
+    createdAt: key.createdAt,
+  }, 200);
 });

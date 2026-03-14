@@ -9,6 +9,8 @@
     "./api-key": "./src/api-key.ts",
     "./domain": "./src/domain.ts",
     "./constants": "./src/constants.ts",
+    "./errors": "./src/errors.ts",
+    "./repository/drizzle": "./src/repository/drizzle.ts",
     "./db/schema": "./src/db/schema.ts",
     "./db/connection": "./src/db/connection.ts"
   },
