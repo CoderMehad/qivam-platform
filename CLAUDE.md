@@ -1,4 +1,4 @@
-# OpenIslam Platform
+# Qivam Platform
 
 Masjid directory and prayer times API — SST v2 monorepo.
 
@@ -48,9 +48,9 @@ packages/functions/          ← All HTTP concerns (Hono app, routes, middleware
 
 Core uses per-module exports (no barrel `index.ts`):
 ```ts
-import * as Mosque from "@openislam/core/mosque";
-import { verifyToken } from "@openislam/core/auth";
-import * as PrayerTimes from "@openislam/core/prayer-times";
+import * as Mosque from "@qivam/core/mosque";
+import { verifyToken } from "@qivam/core/auth";
+import * as PrayerTimes from "@qivam/core/prayer-times";
 ```
 
 ## Commands

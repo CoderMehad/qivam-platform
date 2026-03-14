@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { verifyToken } from "@openislam/core/auth";
+import { verifyToken } from "@qivam/core/auth";
 import type { AppEnv } from "../types.js";
 
 export const jwtAuth = createMiddleware<AppEnv>(async (c, next) => {

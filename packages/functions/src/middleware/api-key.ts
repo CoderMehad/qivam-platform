@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { validate } from "@openislam/core/api-key";
+import { validate } from "@qivam/core/api-key";
 import type { AppEnv } from "../types.js";
 
 export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {

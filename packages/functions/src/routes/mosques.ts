@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import * as Mosque from "@openislam/core/mosque";
+import * as Mosque from "@qivam/core/mosque";
 import type { AppEnv } from "../types.js";
 import { apiKeyAuth } from "../middleware/api-key.js";
 import { publicCache } from "../middleware/cache.js";

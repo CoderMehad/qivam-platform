@@ -129,7 +129,7 @@ const SEED_API_KEY = {
   prefix: "oi_test_abc1",
   keyHash: sha256(SEED_API_KEY_RAW),
   name: "Dev Test Key",
-  contactEmail: "dev@openislam.org",
+  contactEmail: "dev@qivam.com",
   rateLimit: 100,
   isActive: true,
 };

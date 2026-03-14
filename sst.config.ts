@@ -4,7 +4,7 @@ import { MainStack } from "./stacks/MainStack";
 export default {
   config() {
     return {
-      name: "openislam",
+      name: "qivam",
       region: "eu-west-1",
     };
   },

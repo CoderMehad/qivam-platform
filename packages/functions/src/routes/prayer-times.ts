@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import * as PrayerTimes from "@openislam/core/prayer-times";
+import * as PrayerTimes from "@qivam/core/prayer-times";
 import type { AppEnv } from "../types.js";
 import { apiKeyAuth } from "../middleware/api-key.js";
 import { prayerTimesCache } from "../middleware/cache.js";

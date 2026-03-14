@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { register, login, createInvitation } from "@openislam/core/auth";
+import { register, login, createInvitation } from "@qivam/core/auth";
 import type { AppEnv } from "../types.js";
 import {
   registerSchema,

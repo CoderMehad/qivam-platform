@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import * as ApiKey from "@openislam/core/api-key";
+import * as ApiKey from "@qivam/core/api-key";
 import type { AppEnv } from "../types.js";
 import { requestApiKey, apiKeyResponse, apiKeyStatus } from "../schemas/api-key.js";
 import { errorResponse } from "../schemas/common.js";

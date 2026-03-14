@@ -1,11 +1,11 @@
 {
-  "name": "@openislam/functions",
+  "name": "@qivam/functions",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
     "@hono/zod-openapi": "0.16.0",
     "@hono/zod-validator": "0.2.2",
-    "@openislam/core": "workspace:*",
+    "@qivam/core": "workspace:*",
     "@scalar/hono-api-reference": "^0.10.3",
     "hono": "4.12.7",
     "zod": "3.23.8"

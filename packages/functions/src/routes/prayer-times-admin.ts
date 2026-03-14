@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import * as PrayerTimes from "@openislam/core/prayer-times";
+import * as PrayerTimes from "@qivam/core/prayer-times";
 import type { AppEnv } from "../types.js";
 import { jwtAuth } from "../middleware/admin-auth.js";
 import { requireOwnership } from "../middleware/ownership.js";

@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { pingDb } from "@openislam/core/db/connection";
+import { pingDb } from "@qivam/core/db/connection";
 import type { AppEnv } from "../types.js";
 
 export const healthRoutes = new OpenAPIHono<AppEnv>();

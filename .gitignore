@@ -5,3 +5,4 @@ node_modules
 *.tsbuildinfo
 dist/
 .build/
+cdk.context.json
