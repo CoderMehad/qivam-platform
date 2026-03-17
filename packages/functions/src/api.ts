@@ -13,6 +13,8 @@ import { mosqueRoutes } from "./routes/mosques.js";
 import { mosqueAdminRoutes } from "./routes/mosques-admin.js";
 import { prayerTimesRoutes } from "./routes/prayer-times.js";
 import { prayerTimesAdminRoutes } from "./routes/prayer-times-admin.js";
+import { prayerCalculationRoutes, standalonePrayerCalculationRoutes } from "./routes/prayer-calculation.js";
+import { prayerCalculationAdminRoutes } from "./routes/prayer-calculation-admin.js";
 import { apiKeyRoutes } from "./routes/api-keys.js";
 import { superAdminRoutes } from "./routes/super-admin.js";
 import { log } from "./lib/logger.js";
@@ -61,6 +63,8 @@ app.onError((err, c) => {
 const consumerApp = new OpenAPIHono<AppEnv>();
 consumerApp.route("/mosques", mosqueRoutes);
 consumerApp.route("/mosques", prayerTimesRoutes);
+consumerApp.route("/mosques", prayerCalculationRoutes);
+consumerApp.route("/prayer-times", standalonePrayerCalculationRoutes);
 consumerApp.route("/api-keys", apiKeyRoutes);
 
 consumerApp.doc("/docs/openapi.json", {
@@ -94,6 +98,7 @@ app.route("/v1", consumerApp);
 app.route("/v1/auth", authRoutes);
 app.route("/v1/mosques", mosqueAdminRoutes);
 app.route("/v1/mosques", prayerTimesAdminRoutes);
+app.route("/v1/mosques", prayerCalculationAdminRoutes);
 
 // Super admin routes — only available in non-production stages (local dev via `npx sst dev`)
 if (!isProduction) {

@@ -12,7 +12,8 @@
     "./errors": "./src/errors.ts",
     "./repository/drizzle": "./src/repository/drizzle.ts",
     "./db/schema": "./src/db/schema.ts",
-    "./db/connection": "./src/db/connection.ts"
+    "./db/connection": "./src/db/connection.ts",
+    "./lib/prayer-calculation": "./src/lib/index.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
