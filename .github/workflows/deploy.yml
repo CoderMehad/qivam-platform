@@ -1,17 +1,13 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       stage:
-        description: "Deployment stage"
-        required: true
-        default: "dev"
+        description: "Deployment stage (main branch only)"
+        required: false
         type: choice
         options:
-          - dev
           - staging
           - production
 
@@ -47,5 +43,17 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-west-1
 
-      - name: Deploy
-        run: npx sst deploy --stage ${{ inputs.stage || 'dev' }}
+      - name: Determine stage
+        id: stage
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          if [ "$BRANCH" = "main" ]; then
+            STAGE="${{ inputs.stage || 'staging' }}"
+          else
+            # Sanitise branch name for SST stage (lowercase, alphanumeric + hyphens only)
+            STAGE=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//')
+          fi
+          echo "name=$STAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to ${{ steps.stage.outputs.name }}
+        run: npx sst deploy --stage ${{ steps.stage.outputs.name }}
