@@ -1,0 +1,1 @@
+ALTER TABLE "api_keys" ALTER COLUMN "is_active" SET DEFAULT true;

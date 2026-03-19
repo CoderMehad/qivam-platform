@@ -120,7 +120,7 @@ export const apiKeys = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     contactEmail: varchar("contact_email", { length: 255 }).notNull(),
     rateLimit: integer("rate_limit").notNull().default(100),
-    isActive: boolean("is_active").notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

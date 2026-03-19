@@ -5,8 +5,11 @@ import {
   updateApiKeyActive,
   listInvitations,
 } from "@qivam/core/repository/drizzle";
+import { superAdminAuth } from "../middleware/super-admin-auth.js";
 
 export const superAdminRoutes = new Hono<AppEnv>();
+
+superAdminRoutes.use("*", superAdminAuth);
 
 // ── API Keys ────────────────────────────────────────────────────────────────
 

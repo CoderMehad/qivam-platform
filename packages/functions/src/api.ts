@@ -22,6 +22,7 @@ import { log } from "./lib/logger.js";
 // Bridge SST Config.Secret values into process.env for core layer
 process.env.NEON_DATABASE_URL ??= (Config as Record<string, string>).NEON_DATABASE_URL;
 process.env.JWT_SECRET ??= (Config as Record<string, string>).JWT_SECRET;
+process.env.SUPER_ADMIN_KEY ??= (Config as Record<string, string>).SUPER_ADMIN_KEY;
 
 const app = new OpenAPIHono<AppEnv>();
 
@@ -37,7 +38,7 @@ app.use(
       ? ["https://qivam.com", "https://www.qivam.com", "https://docs.qivam.com"]
       : "*",
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "X-API-Key", "X-Request-Id"],
+    allowHeaders: ["Content-Type", "Authorization", "X-API-Key", "X-Request-Id", "X-Super-Admin-Key"],
     maxAge: 86400,
   }),
 );
@@ -100,9 +101,7 @@ app.route("/v1/mosques", mosqueAdminRoutes);
 app.route("/v1/mosques", prayerTimesAdminRoutes);
 app.route("/v1/mosques", prayerCalculationAdminRoutes);
 
-// Super admin routes — only available in non-production stages (local dev via `npx sst dev`)
-if (!isProduction) {
-  app.route("/v1/super", superAdminRoutes);
-}
+// Super admin routes — protected by X-Super-Admin-Key header
+app.route("/v1/super", superAdminRoutes);
 
 export const handler = handle(app);

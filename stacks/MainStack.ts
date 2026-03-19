@@ -1,8 +1,15 @@
 import { Api, Config, StackContext } from "sst/constructs";
+import * as ses from "aws-cdk-lib/aws-ses";
 
 export function MainStack({ stack }: StackContext) {
   const NEON_DATABASE_URL = new Config.Secret(stack, "NEON_DATABASE_URL");
   const JWT_SECRET = new Config.Secret(stack, "JWT_SECRET");
+  const SUPER_ADMIN_KEY = new Config.Secret(stack, "SUPER_ADMIN_KEY");
+
+  // SES domain identity — outputs DKIM records to add in Cloudflare DNS
+  new ses.EmailIdentity(stack, "SesIdentity", {
+    identity: ses.Identity.domain("qivam.com"),
+  });
 
   // TODO: Re-add Bucket for mosque media (S3) when needed
   // const mediaBucket = new Bucket(stack, "MediaBucket");
@@ -10,7 +17,7 @@ export function MainStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        bind: [NEON_DATABASE_URL, JWT_SECRET],
+        bind: [NEON_DATABASE_URL, JWT_SECRET, SUPER_ADMIN_KEY],
         environment: {
           SST_STAGE: stack.stage,
         },
@@ -24,6 +31,8 @@ export function MainStack({ stack }: StackContext) {
       "ANY /{proxy+}": "packages/functions/src/api.handler",
     },
   });
+
+  api.attachPermissions(["ses:SendEmail", "ses:SendRawEmail"]);
 
   stack.addOutputs({
     ApiEndpoint: api.url,

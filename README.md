@@ -12,7 +12,7 @@ Qivam is a platform providing APIs and data services that Muslim developers can 
 
 - **Masjid directory** — searchable by name, location, and proximity
 - **Prayer times** — per-mosque prayer schedules
-- **Developer API keys** — vetted access for third-party applications
+- **Developer API keys** — issued to third-party applications on request
 
 ## For developers
 
@@ -21,7 +21,7 @@ Consumer apps call the Qivam API using an issued API key. The data and infrastru
 To get started:
 
 1. Read the [API documentation](https://docs.qivam.com)
-2. Request a developer API key (details in the docs)
+2. Request a developer API key — it will be emailed to you automatically
 3. Build
 
 ## Tech stack

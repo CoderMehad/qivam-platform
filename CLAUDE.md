@@ -9,7 +9,8 @@ Open infrastructure for Muslim developers — SST v2 monorepo on AWS.
 - **Database**: Neon PostgreSQL (serverless) with PostGIS, Drizzle ORM
 - **Driver**: `@neondatabase/serverless` (HTTP)
 - **Validation**: Zod + `@hono/zod-openapi`
-- **Auth**: JWT (jose), vetted API keys
+- **Auth**: JWT (jose), API keys
+- **Email**: AWS SES (`@aws-sdk/client-sesv2`) — API key delivery
 - **Storage**: S3 for mosque media
 - **Package manager**: pnpm workspaces
 
