@@ -14,7 +14,7 @@ Thank you for contributing. This document covers how to set up the project local
 
 - Node.js 20+
 - pnpm 9+
-- A PostgreSQL database (any provider works — Neon free tier is the easiest to get started with)
+- A [Neon](https://neon.tech) PostgreSQL database (free tier is sufficient — currently required, see note below)
 
 **Clone and install:**
 
@@ -59,7 +59,7 @@ import * as PrayerTimes from "@qivam/core/prayer-times";
 
 ## Database
 
-The project currently uses `@neondatabase/serverless` as the database driver, which is optimised for Neon's HTTP transport. The Drizzle ORM queries themselves are standard PostgreSQL and work with any provider — only the connection setup in `packages/core/src/db/connection.ts` is Neon-specific. Support for a standard `pg`/`postgres` driver is planned. If you want to use a different provider in the meantime, swapping the driver in that file is the only change required.
+The project currently uses `@neondatabase/serverless` as the database driver, which is specific to Neon's HTTP transport. This means a Neon database is required for local development at this time. The Drizzle ORM queries themselves are standard PostgreSQL — support for a generic `pg`/`postgres` driver is planned, which will allow any PostgreSQL provider. Create a free Neon project at [neon.tech](https://neon.tech) and use your branch connection string as `NEON_DATABASE_URL`.
 
 ## Coding conventions
 
