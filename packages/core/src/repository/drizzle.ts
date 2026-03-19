@@ -7,7 +7,7 @@ import {
   apiKeys,
   invitations,
 } from "../db/schema.js";
-import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, Invitation, MosqueFacility } from "../domain.js";
+import type { Mosque, Admin, PrayerTimeEntry, ApiKey, ApiKeyPublic, Invitation, InvitationPublic, MosqueFacility } from "../domain.js";
 import type { PaginatedResult } from "../domain.js";
 import { slugify } from "./helpers.js";
 import { ConflictError } from "../errors.js";
@@ -530,6 +530,7 @@ export async function insertApiKey(data: {
     })
     .returning();
 
+  if (!rows[0]) throw new Error("insertApiKey: no row returned after insert");
   return mapApiKeyRow(rows[0]);
 }
 
@@ -662,7 +663,7 @@ export async function updateApiKeyActive(
 
 export async function listInvitations(
   params: { page?: number; limit?: number } = {},
-): Promise<PaginatedResult<Invitation>> {
+): Promise<PaginatedResult<InvitationPublic>> {
   const db = getDb();
   const limit = Math.min(params.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
   const page = Math.max(params.page ?? 1, 1);
@@ -682,7 +683,10 @@ export async function listInvitations(
   const totalPages = Math.ceil(total / limit);
 
   return {
-    data: rows.map(mapInvitationRow),
+    data: rows.map((row) => {
+      const { token: _, ...pub } = mapInvitationRow(row);
+      return pub;
+    }),
     page,
     limit,
     total,

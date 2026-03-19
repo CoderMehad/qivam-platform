@@ -87,3 +87,5 @@ export interface PaginatedResult<T> {
 export type AdminPublic = Omit<Admin, "passwordHash">;
 
 export type ApiKeyPublic = Omit<ApiKey, "keyHash">;
+
+export type InvitationPublic = Omit<Invitation, "token">;

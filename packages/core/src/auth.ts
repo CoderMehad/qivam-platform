@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { hash, compare } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
-import type { Admin, AdminPublic, Invitation } from "./domain.js";
+import type { Admin, AdminPublic, Invitation, InvitationPublic } from "./domain.js";
 import { BCRYPT_COST, JWT_EXPIRY } from "./constants.js";
 import { BadRequestError, ConflictError } from "./errors.js";
 import {
@@ -121,8 +121,6 @@ export async function verifyToken(
 }
 
 const INVITE_EXPIRY_HOURS = 72;
-
-export type InvitationPublic = Omit<Invitation, "token">;
 
 export async function createInvitation(
   adminId: string,
