@@ -39,12 +39,9 @@ To get started:
 ## Repository structure
 
 ```
-platform/
-  packages/core/       — Domain layer: types, business logic, DB queries
-  packages/functions/  — Hono app, routes, middleware
-  stacks/              — Infrastructure definitions
-landing/               — Landing page
-docs/                  — API documentation source
+packages/core/       — Domain layer: types, business logic, DB queries
+packages/functions/  — Hono app, routes, middleware
+stacks/              — Infrastructure definitions
 ```
 
 The domain layer (`core`) has no knowledge of HTTP — it exports plain TypeScript functions. The `functions` package owns all routing and request handling.
