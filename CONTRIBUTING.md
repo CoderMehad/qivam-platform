@@ -19,8 +19,8 @@ Thank you for contributing. This document covers how to set up the project local
 **Clone and install:**
 
 ```bash
-git clone https://github.com/your-org/qivam.git
-cd qivam/platform
+git clone https://github.com/CoderMehad/qivam-platform.git
+cd qivam-platform/platform
 pnpm install
 ```
 
