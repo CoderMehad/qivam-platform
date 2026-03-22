@@ -22,5 +22,19 @@
     "./schemas/prayer-calculation": "./schemas/prayer-calculation.schema.ts",
     "./adapters/ses": "./adapters/ses.adapter.ts",
     "./adapters/logger": "./adapters/logger.adapter.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "catalog:",
+    "@hono/zod-openapi": "catalog:",
+    "@neondatabase/serverless": "catalog:",
+    "bcryptjs": "catalog:",
+    "drizzle-orm": "catalog:",
+    "jose": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "catalog:",
+    "drizzle-kit": "catalog:",
+    "typescript": "5.5.4"
   }
 }
