@@ -4,45 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@aws-sdk/client-sesv2':
-      specifier: ^3.1010.0
-      version: 3.1010.0
-    '@hono/zod-openapi':
-      specifier: 0.16.0
-      version: 0.16.0
-    '@hono/zod-validator':
-      specifier: 0.2.2
-      version: 0.2.2
-    '@neondatabase/serverless':
-      specifier: ^0.10.4
-      version: 0.10.4
-    '@scalar/hono-api-reference':
-      specifier: ^0.10.3
-      version: 0.10.3
-    '@types/bcryptjs':
-      specifier: ^3.0.0
-      version: 3.0.0
-    bcryptjs:
-      specifier: ^3.0.3
-      version: 3.0.3
-    drizzle-kit:
-      specifier: ^0.31.9
-      version: 0.31.9
-    drizzle-orm:
-      specifier: ^0.45.1
-      version: 0.45.1
-    hono:
-      specifier: 4.12.7
-      version: 4.12.7
-    jose:
-      specifier: 5.6.3
-      version: 5.6.3
-    zod:
-      specifier: 3.23.8
-      version: 3.23.8
-
 importers:
 
   .:
@@ -63,32 +24,32 @@ importers:
   packages/core:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 'catalog:'
+        specifier: ^3.1010.0
         version: 3.1010.0(aws-crt@1.29.1)
       '@hono/zod-openapi':
-        specifier: 'catalog:'
+        specifier: 0.16.0
         version: 0.16.0(hono@4.12.7)(zod@3.23.8)
       '@neondatabase/serverless':
-        specifier: 'catalog:'
+        specifier: ^0.10.4
         version: 0.10.4
       bcryptjs:
-        specifier: 'catalog:'
+        specifier: ^3.0.3
         version: 3.0.3
       drizzle-orm:
-        specifier: 'catalog:'
+        specifier: ^0.45.1
         version: 0.45.1(@aws-sdk/client-rds-data@3.1008.0(aws-crt@1.29.1))(@neondatabase/serverless@0.10.4)(@types/pg@8.11.6)(kysely@0.25.0)(postgres@3.4.8)
       jose:
-        specifier: 'catalog:'
+        specifier: 5.6.3
         version: 5.6.3
       zod:
-        specifier: 'catalog:'
+        specifier: 3.23.8
         version: 3.23.8
     devDependencies:
       '@types/bcryptjs':
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.0.0
       drizzle-kit:
-        specifier: 'catalog:'
+        specifier: ^0.31.9
         version: 0.31.9
       typescript:
         specifier: 5.5.4
@@ -97,22 +58,22 @@ importers:
   packages/functions:
     dependencies:
       '@hono/zod-openapi':
-        specifier: 'catalog:'
+        specifier: 0.16.0
         version: 0.16.0(hono@4.12.7)(zod@3.23.8)
       '@hono/zod-validator':
-        specifier: 'catalog:'
+        specifier: 0.2.2
         version: 0.2.2(hono@4.12.7)(zod@3.23.8)
       '@qivam/core':
         specifier: workspace:*
         version: link:../core
       '@scalar/hono-api-reference':
-        specifier: 'catalog:'
+        specifier: ^0.10.3
         version: 0.10.3(hono@4.12.7)
       hono:
-        specifier: 'catalog:'
+        specifier: 4.12.7
         version: 4.12.7
       zod:
-        specifier: 'catalog:'
+        specifier: 3.23.8
         version: 3.23.8
     devDependencies:
       typescript:

@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
-    "@hono/zod-openapi": "catalog:",
-    "@hono/zod-validator": "catalog:",
+    "@hono/zod-openapi": "0.16.0",
+    "@hono/zod-validator": "0.2.2",
     "@qivam/core": "workspace:*",
-    "@scalar/hono-api-reference": "catalog:",
-    "hono": "catalog:",
-    "zod": "catalog:"
+    "@scalar/hono-api-reference": "^0.10.3",
+    "hono": "4.12.7",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "typescript": "5.5.4"

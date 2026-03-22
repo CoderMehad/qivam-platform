@@ -24,17 +24,17 @@
     "./adapters/logger": "./adapters/logger.adapter.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "catalog:",
-    "@hono/zod-openapi": "catalog:",
-    "@neondatabase/serverless": "catalog:",
-    "bcryptjs": "catalog:",
-    "drizzle-orm": "catalog:",
-    "jose": "catalog:",
-    "zod": "catalog:"
+    "@aws-sdk/client-sesv2": "^3.1010.0",
+    "@hono/zod-openapi": "0.16.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.1",
+    "jose": "5.6.3",
+    "zod": "3.23.8"
   },
   "devDependencies": {
-    "@types/bcryptjs": "catalog:",
-    "drizzle-kit": "catalog:",
+    "@types/bcryptjs": "^3.0.0",
+    "drizzle-kit": "^0.31.9",
     "typescript": "5.5.4"
   }
 }
