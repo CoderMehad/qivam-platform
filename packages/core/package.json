@@ -13,7 +13,7 @@
     "./repository/drizzle": "./repositories/index.ts",
     "./db/schema": "./schemas/drizzle.schema.ts",
     "./db/connection": "./adapters/neon.adapter.ts",
-    "./lib/prayer-calculation": "./lib/index.ts",
+    "./lib/prayer-calculation": "./lib/prayer-calculation/index.ts",
     "./schemas/mosque": "./schemas/mosque.schema.ts",
     "./schemas/api-key": "./schemas/api-key.schema.ts",
     "./schemas/auth": "./schemas/auth.schema.ts",
