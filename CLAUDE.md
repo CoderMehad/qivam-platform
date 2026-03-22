@@ -25,7 +25,8 @@ packages/core/                 ← Pure domain layer (NO Hono, NO HTTP)
     neon.adapter.ts            ← Neon/Drizzle database connection
     ses.adapter.ts             ← AWS SES email sending
     logger.adapter.ts          ← Structured JSON logger
-  lib/                         ← Custom prayer calculation (no npm adhan)
+  lib/
+    prayer-calculation/        ← Custom prayer calculation (no npm adhan)
   models/
     mosque.model.ts            ← Mosque, MosqueFacility types
     admin.model.ts             ← Admin, AdminPublic types
@@ -122,7 +123,7 @@ npx drizzle-kit migrate
 
 ## Prayer Calculation
 
-Custom implementation only — do NOT install `adhan` from npm. Lives in `packages/core/lib/`.
+Custom implementation only — do NOT install `adhan` from npm. Lives in `packages/core/lib/prayer-calculation/`.
 
 ## Security
 
