@@ -23,7 +23,7 @@ const optOutRoute = createRoute({
 
 analyticsRoutes.openapi(optOutRoute, async (c) => {
   const { id } = c.get("apiKey");
-  await ApiKey.setAnalyticsOptOut(id, true);
+  await ApiKey.setAnalyticsEnabled(id, false);
   return c.json({ message: "Analytics logging disabled for this key" }, 200);
 });
 
@@ -43,6 +43,6 @@ const optInRoute = createRoute({
 
 analyticsRoutes.openapi(optInRoute, async (c) => {
   const { id } = c.get("apiKey");
-  await ApiKey.setAnalyticsOptOut(id, false);
+  await ApiKey.setAnalyticsEnabled(id, true);
   return c.json({ message: "Analytics logging enabled for this key" }, 200);
 });

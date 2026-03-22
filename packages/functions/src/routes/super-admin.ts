@@ -3,6 +3,7 @@ import type { AppEnv } from "../types.js";
 import {
   listAllApiKeys,
   updateApiKeyActive,
+  updateApiKeyAnalyticsEnabled,
   listInvitations,
 } from "@qivam/core/repository/drizzle";
 import { superAdminAuth } from "../middleware/super-admin-auth.js";
@@ -23,19 +24,27 @@ superAdminRoutes.get("/api-keys", async (c) => {
 superAdminRoutes.patch("/api-keys/:id/activate", async (c) => {
   const { id } = c.req.param();
   const key = await updateApiKeyActive(id, true);
-  if (!key) {
-    return c.json({ error: "API key not found" }, 404);
-  }
+  if (!key) return c.json({ error: "API key not found" }, 404);
   return c.json(key, 200);
 });
 
 superAdminRoutes.patch("/api-keys/:id/deactivate", async (c) => {
   const { id } = c.req.param();
   const key = await updateApiKeyActive(id, false);
-  if (!key) {
-    return c.json({ error: "API key not found" }, 404);
-  }
+  if (!key) return c.json({ error: "API key not found" }, 404);
   return c.json(key, 200);
+});
+
+superAdminRoutes.patch("/api-keys/:id/analytics-opt-in", async (c) => {
+  const { id } = c.req.param();
+  await updateApiKeyAnalyticsEnabled(id, true);
+  return c.json({ ok: true }, 200);
+});
+
+superAdminRoutes.patch("/api-keys/:id/analytics-opt-out", async (c) => {
+  const { id } = c.req.param();
+  await updateApiKeyAnalyticsEnabled(id, false);
+  return c.json({ ok: true }, 200);
 });
 
 // ── Invitations ─────────────────────────────────────────────────────────────

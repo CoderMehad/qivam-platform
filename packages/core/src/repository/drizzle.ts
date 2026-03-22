@@ -74,7 +74,7 @@ function mapApiKeyRow(row: typeof apiKeys.$inferSelect): ApiKey {
     contactEmail: row.contactEmail,
     rateLimit: row.rateLimit,
     isActive: row.isActive,
-    analyticsOptOut: row.analyticsOptOut,
+    analyticsEnabled: row.analyticsEnabled,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -697,7 +697,7 @@ export async function listInvitations(
 
 export async function getActiveApiKeyByHash(
   keyHash: string,
-): Promise<{ id: string; name: string; rateLimit: number; analyticsOptOut: boolean } | undefined> {
+): Promise<{ id: string; name: string; rateLimit: number; analyticsEnabled: boolean } | undefined> {
   const db = getDb();
   const rows = await db
     .select()
@@ -706,13 +706,13 @@ export async function getActiveApiKeyByHash(
     .limit(1);
 
   if (!rows[0]) return undefined;
-  return { id: rows[0].id, name: rows[0].name, rateLimit: rows[0].rateLimit, analyticsOptOut: rows[0].analyticsOptOut };
+  return { id: rows[0].id, name: rows[0].name, rateLimit: rows[0].rateLimit, analyticsEnabled: rows[0].analyticsEnabled };
 }
 
-export async function updateApiKeyAnalyticsOptOut(id: string, optOut: boolean): Promise<void> {
+export async function updateApiKeyAnalyticsEnabled(id: string, enabled: boolean): Promise<void> {
   const db = getDb();
   await db
     .update(apiKeys)
-    .set({ analyticsOptOut: optOut })
+    .set({ analyticsEnabled: enabled })
     .where(eq(apiKeys.id, id));
 }
