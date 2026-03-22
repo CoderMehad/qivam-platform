@@ -6,10 +6,13 @@ export function MainStack({ stack }: StackContext) {
   const JWT_SECRET = new Config.Secret(stack, "JWT_SECRET");
   const SUPER_ADMIN_KEY = new Config.Secret(stack, "SUPER_ADMIN_KEY");
 
-  // SES domain identity — outputs DKIM records to add in Cloudflare DNS
-  new ses.EmailIdentity(stack, "SesIdentity", {
-    identity: ses.Identity.domain("qivam.com"),
-  });
+  // SES domain identity — only on production (domain identity is a regional singleton;
+  // creating it on every stage would conflict with the existing production resource)
+  if (stack.stage === "production") {
+    new ses.EmailIdentity(stack, "SesIdentity", {
+      identity: ses.Identity.domain("qivam.com"),
+    });
+  }
 
   // TODO: Re-add Bucket for mosque media (S3) when needed
   // const mediaBucket = new Bucket(stack, "MediaBucket");
@@ -29,7 +32,7 @@ export function MainStack({ stack }: StackContext) {
       },
     },
     routes: {
-      "ANY /{proxy+}": "packages/functions/src/api.handler",
+      "ANY /{proxy+}": "packages/functions/api.handler",
     },
   });
 

@@ -1,5 +1,6 @@
-import type { Mosque, PaginatedResult } from "./domain.js";
-import { MAX_PAGE_SIZE } from "./constants.js";
+import type { Mosque } from "../models/mosque.model.js";
+import type { PaginatedResult } from "../models/shared.model.js";
+import { MAX_PAGE_SIZE } from "../constants.js";
 import {
   listMosques,
   getMosqueByIdOrSlug as dbGetByIdOrSlug,
@@ -7,7 +8,7 @@ import {
   insertMosque,
   updateMosque as dbUpdateMosque,
   deleteMosque,
-} from "./repository/drizzle.js";
+} from "../repositories/mosque.repository.js";
 
 export interface ListParams {
   page?: number;

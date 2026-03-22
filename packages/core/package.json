@@ -3,28 +3,38 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    "./mosque": "./src/mosque.ts",
-    "./auth": "./src/auth.ts",
-    "./prayer-times": "./src/prayer-times.ts",
-    "./api-key": "./src/api-key.ts",
-    "./domain": "./src/domain.ts",
-    "./constants": "./src/constants.ts",
-    "./errors": "./src/errors.ts",
-    "./repository/drizzle": "./src/repository/drizzle.ts",
-    "./db/schema": "./src/db/schema.ts",
-    "./db/connection": "./src/db/connection.ts",
-    "./lib/prayer-calculation": "./src/lib/index.ts"
+    "./mosque": "./use-cases/mosques.use-case.ts",
+    "./auth": "./use-cases/auth.use-case.ts",
+    "./prayer-times": "./use-cases/prayer-times.use-case.ts",
+    "./api-key": "./use-cases/api-keys.use-case.ts",
+    "./domain": "./models/index.ts",
+    "./constants": "./constants.ts",
+    "./errors": "./errors.ts",
+    "./repository/drizzle": "./repositories/index.ts",
+    "./db/schema": "./schemas/drizzle.schema.ts",
+    "./db/connection": "./adapters/neon.adapter.ts",
+    "./lib/prayer-calculation": "./lib/prayer-calculation/index.ts",
+    "./schemas/mosque": "./schemas/mosque.schema.ts",
+    "./schemas/api-key": "./schemas/api-key.schema.ts",
+    "./schemas/auth": "./schemas/auth.schema.ts",
+    "./schemas/common": "./schemas/common.schema.ts",
+    "./schemas/prayer-times": "./schemas/prayer-times.schema.ts",
+    "./schemas/prayer-calculation": "./schemas/prayer-calculation.schema.ts",
+    "./adapters/ses": "./adapters/ses.adapter.ts",
+    "./adapters/logger": "./adapters/logger.adapter.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1",
-    "bcryptjs": "^3.0.3",
-    "jose": "5.6.3",
+    "@aws-sdk/client-sesv2": "^3.1010.0",
+    "@hono/zod-openapi": "0.16.0",
     "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.1",
+    "jose": "5.6.3",
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.9",
     "@types/bcryptjs": "^3.0.0",
+    "drizzle-kit": "^0.31.9",
     "typescript": "5.5.4"
   }
 }

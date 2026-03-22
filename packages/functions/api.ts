@@ -19,7 +19,7 @@ import { apiKeyRoutes } from "./routes/api-keys.js";
 import { superAdminRoutes } from "./routes/super-admin.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { requestAnalytics } from "./middleware/analytics.js";
-import { log } from "./lib/logger.js";
+import { log } from "@qivam/core/adapters/logger";
 
 // Bridge SST Config.Secret values into process.env for core layer
 process.env.NEON_DATABASE_URL ??= (Config as Record<string, string>).NEON_DATABASE_URL;

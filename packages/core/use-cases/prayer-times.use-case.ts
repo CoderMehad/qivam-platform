@@ -1,10 +1,11 @@
-import type { PrayerTimeEntry, PaginatedResult } from "./domain.js";
+import type { PrayerTimeEntry } from "../models/prayer-times.model.js";
+import type { PaginatedResult } from "../models/shared.model.js";
 import {
   getPrayerTimes,
   getTodayPrayerTimes,
   upsertPrayerTime,
   bulkUpsertPrayerTimes,
-} from "./repository/drizzle.js";
+} from "../repositories/prayer-times.repository.js";
 
 export interface GetOptions {
   date?: string;

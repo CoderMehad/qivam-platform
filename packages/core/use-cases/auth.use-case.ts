@@ -1,16 +1,19 @@
 import { randomBytes } from "node:crypto";
 import { hash, compare } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
-import type { Admin, AdminPublic, Invitation, InvitationPublic } from "./domain.js";
-import { BCRYPT_COST, JWT_EXPIRY } from "./constants.js";
-import { BadRequestError, ConflictError } from "./errors.js";
+import type { Admin, AdminPublic } from "../models/admin.model.js";
+import type { InvitationPublic } from "../models/invitation.model.js";
+import { BCRYPT_COST, JWT_EXPIRY } from "../constants.js";
+import { BadRequestError, ConflictError } from "../errors.js";
 import {
   getAdminByEmail,
   insertAdmin,
+} from "../repositories/admin.repository.js";
+import {
   insertInvitation,
   getInvitationByToken,
   markInvitationUsed,
-} from "./repository/drizzle.js";
+} from "../repositories/invitation.repository.js";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;

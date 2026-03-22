@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import type { AppEnv } from "../types.js";
-import { log } from "../lib/logger.js";
+import { log } from "@qivam/core/adapters/logger";
 
 export const requestAnalytics = createMiddleware<AppEnv>(async (c, next) => {
   const start = Date.now();

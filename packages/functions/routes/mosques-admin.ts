@@ -7,8 +7,8 @@ import {
   createMosque,
   updateMosque,
   mosqueResponse,
-} from "../schemas/mosque.js";
-import { errorResponse } from "../schemas/common.js";
+} from "@qivam/core/schemas/mosque";
+import { errorResponse } from "@qivam/core/schemas/common";
 
 export const mosqueAdminRoutes = new OpenAPIHono<AppEnv>();
 

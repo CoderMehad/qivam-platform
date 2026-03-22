@@ -15,13 +15,13 @@ import type { AppEnv } from "../types.js";
 import { apiKeyAuth } from "../middleware/api-key.js";
 import { rateLimiter } from "../middleware/rate-limit.js";
 import { publicCache } from "../middleware/cache.js";
-import { errorResponse } from "../schemas/common.js";
+import { errorResponse } from "@qivam/core/schemas/common";
 import {
   mosqueCalculateQuery,
   standaloneCalculateQuery,
   calculatedTimesResponse,
   qiblaResponse,
-} from "../schemas/prayer-calculation.js";
+} from "@qivam/core/schemas/prayer-calculation";
 
 export const prayerCalculationRoutes = new OpenAPIHono<AppEnv>();
 export const standalonePrayerCalculationRoutes = new OpenAPIHono<AppEnv>();

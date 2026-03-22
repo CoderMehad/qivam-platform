@@ -7,8 +7,8 @@ import { prayerTimesCache } from "../middleware/cache.js";
 import {
   prayerTimesResponse,
   querySchema,
-} from "../schemas/prayer-times.js";
-import { errorResponse, paginationMeta } from "../schemas/common.js";
+} from "@qivam/core/schemas/prayer-times";
+import { errorResponse, paginationMeta } from "@qivam/core/schemas/common";
 
 export const prayerTimesRoutes = new OpenAPIHono<AppEnv>();
 

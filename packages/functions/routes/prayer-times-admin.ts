@@ -7,7 +7,7 @@ import {
   createPrayerTimes,
   bulkSchema,
   prayerTimesResponse,
-} from "../schemas/prayer-times.js";
+} from "@qivam/core/schemas/prayer-times";
 
 export const prayerTimesAdminRoutes = new OpenAPIHono<AppEnv>();
 

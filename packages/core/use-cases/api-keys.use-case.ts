@@ -1,12 +1,12 @@
 import { randomBytes } from "node:crypto";
-import type { ApiKeyPublic } from "./domain.js";
-import { sha256 } from "./repository/helpers.js";
+import type { ApiKeyPublic } from "../models/api-key.model.js";
+import { sha256 } from "../shared/helpers.js";
 import {
   insertApiKey,
   getApiKeyByPrefix,
   getActiveApiKeyByHash,
   updateApiKeyAnalyticsEnabled,
-} from "./repository/drizzle.js";
+} from "../repositories/api-key.repository.js";
 
 function generateRawKey(): string {
   const bytes = randomBytes(24);
