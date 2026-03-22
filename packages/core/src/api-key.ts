@@ -5,6 +5,7 @@ import {
   insertApiKey,
   getApiKeyByPrefix,
   getActiveApiKeyByHash,
+  updateApiKeyAnalyticsOptOut,
 } from "./repository/drizzle.js";
 
 function generateRawKey(): string {
@@ -41,7 +42,11 @@ export async function getByPrefix(
 
 export async function validate(
   rawKey: string,
-): Promise<{ id: string; name: string; rateLimit: number } | undefined> {
+): Promise<{ id: string; name: string; rateLimit: number; analyticsOptOut: boolean } | undefined> {
   const keyHash = sha256(rawKey);
   return getActiveApiKeyByHash(keyHash);
+}
+
+export async function setAnalyticsOptOut(id: string, optOut: boolean): Promise<void> {
+  return updateApiKeyAnalyticsOptOut(id, optOut);
 }

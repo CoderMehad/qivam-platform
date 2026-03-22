@@ -15,6 +15,13 @@
       "when": 1773770463161,
       "tag": "0001_curious_dreaming_celestial",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774183300251,
+      "tag": "0002_marvelous_shard",
+      "breakpoints": true
     }
   ]
 }

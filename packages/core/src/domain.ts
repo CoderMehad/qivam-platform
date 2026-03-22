@@ -62,6 +62,7 @@ export interface ApiKey {
   contactEmail: string;
   rateLimit: number;
   isActive: boolean;
+  analyticsOptOut: boolean;
   createdAt: string;
 }
 
