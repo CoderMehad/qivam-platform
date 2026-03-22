@@ -23,6 +23,12 @@ importers:
 
   packages/core:
     dependencies:
+      '@aws-sdk/client-sesv2':
+        specifier: ^3.1010.0
+        version: 3.1010.0(aws-crt@1.29.1)
+      '@hono/zod-openapi':
+        specifier: '*'
+        version: 0.16.0(hono@4.12.7)(zod@3.23.8)
       '@neondatabase/serverless':
         specifier: ^0.10.4
         version: 0.10.4
