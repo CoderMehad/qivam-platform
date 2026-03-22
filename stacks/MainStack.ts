@@ -21,6 +21,7 @@ export function MainStack({ stack }: StackContext) {
         environment: {
           SST_STAGE: stack.stage,
         },
+        logRetention: "one_month",
       },
       throttle: {
         rate: 100,
