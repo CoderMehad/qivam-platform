@@ -7,55 +7,6 @@ settings:
 importers:
 
   .:
-    devDependencies:
-      aws-cdk-lib:
-        specifier: 2.142.1
-        version: 2.142.1(constructs@10.3.0)
-      constructs:
-        specifier: 10.3.0
-        version: 10.3.0
-      sst:
-        specifier: 2.43.7
-        version: 2.43.7(aws-crt@1.29.1)
-      typescript:
-        specifier: 5.5.4
-        version: 5.5.4
-
-  packages/core:
-    dependencies:
-      '@aws-sdk/client-sesv2':
-        specifier: ^3.1010.0
-        version: 3.1010.0(aws-crt@1.29.1)
-      '@hono/zod-openapi':
-        specifier: '*'
-        version: 0.16.0(hono@4.12.7)(zod@3.23.8)
-      '@neondatabase/serverless':
-        specifier: ^0.10.4
-        version: 0.10.4
-      bcryptjs:
-        specifier: ^3.0.3
-        version: 3.0.3
-      drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@aws-sdk/client-rds-data@3.1008.0(aws-crt@1.29.1))(@neondatabase/serverless@0.10.4)(@types/pg@8.11.6)(kysely@0.25.0)(postgres@3.4.8)
-      jose:
-        specifier: 5.6.3
-        version: 5.6.3
-      zod:
-        specifier: 3.23.8
-        version: 3.23.8
-    devDependencies:
-      '@types/bcryptjs':
-        specifier: ^3.0.0
-        version: 3.0.0
-      drizzle-kit:
-        specifier: ^0.31.9
-        version: 0.31.9
-      typescript:
-        specifier: 5.5.4
-        version: 5.5.4
-
-  packages/functions:
     dependencies:
       '@aws-sdk/client-sesv2':
         specifier: ^3.1010.0
@@ -66,22 +17,54 @@ importers:
       '@hono/zod-validator':
         specifier: 0.2.2
         version: 0.2.2(hono@4.12.7)(zod@3.23.8)
-      '@qivam/core':
-        specifier: workspace:*
-        version: link:../core
+      '@neondatabase/serverless':
+        specifier: ^0.10.4
+        version: 0.10.4
       '@scalar/hono-api-reference':
         specifier: ^0.10.3
         version: 0.10.3(hono@4.12.7)
+      bcryptjs:
+        specifier: ^3.0.3
+        version: 3.0.3
+      drizzle-orm:
+        specifier: ^0.45.1
+        version: 0.45.1(@aws-sdk/client-rds-data@3.1008.0(aws-crt@1.29.1))(@neondatabase/serverless@0.10.4)(@types/pg@8.11.6)(kysely@0.25.0)(postgres@3.4.8)
       hono:
         specifier: 4.12.7
         version: 4.12.7
+      jose:
+        specifier: 5.6.3
+        version: 5.6.3
       zod:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@types/bcryptjs':
+        specifier: ^3.0.0
+        version: 3.0.0
+      aws-cdk-lib:
+        specifier: 2.142.1
+        version: 2.142.1(constructs@10.3.0)
+      constructs:
+        specifier: 10.3.0
+        version: 10.3.0
+      drizzle-kit:
+        specifier: ^0.31.9
+        version: 0.31.9
+      sst:
+        specifier: 2.43.7
+        version: 2.43.7(aws-crt@1.29.1)
       typescript:
         specifier: 5.5.4
         version: 5.5.4
+
+  packages/core: {}
+
+  packages/functions:
+    dependencies:
+      '@qivam/core':
+        specifier: workspace:*
+        version: link:../core
 
 packages:
 

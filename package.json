@@ -5,10 +5,24 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/functions/tsconfig.json"
   },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1010.0",
+    "@hono/zod-openapi": "0.16.0",
+    "@hono/zod-validator": "0.2.2",
+    "@neondatabase/serverless": "^0.10.4",
+    "@scalar/hono-api-reference": "^0.10.3",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.1",
+    "hono": "4.12.7",
+    "jose": "5.6.3",
+    "zod": "3.23.8"
+  },
   "devDependencies": {
-    "sst": "2.43.7",
+    "@types/bcryptjs": "^3.0.0",
     "aws-cdk-lib": "2.142.1",
     "constructs": "10.3.0",
+    "drizzle-kit": "^0.31.9",
+    "sst": "2.43.7",
     "typescript": "5.5.4"
   }
 }
