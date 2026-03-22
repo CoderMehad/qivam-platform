@@ -1,0 +1,1 @@
+ALTER TABLE "api_keys" RENAME COLUMN "analytics_opt_out" TO "analytics_enabled";

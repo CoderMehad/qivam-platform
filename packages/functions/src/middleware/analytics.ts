@@ -6,9 +6,9 @@ export const requestAnalytics = createMiddleware<AppEnv>(async (c, next) => {
   const start = Date.now();
   await next();
 
-  // Skip if the key holder has opted out
+  // Skip if analytics is disabled for this key
   const apiKeyCtx = c.get("apiKey");
-  if (apiKeyCtx?.analyticsOptOut) return;
+  if (apiKeyCtx && !apiKeyCtx.analyticsEnabled) return;
 
   const rawKey = c.req.header("X-API-Key") ?? null;
   const sizeHeader = c.res.headers.get("content-length");
