@@ -13,9 +13,9 @@ import type {
 import type { AppEnv } from "../types.js";
 import { jwtAuth } from "../middleware/admin-auth.js";
 import { requireOwnership } from "../middleware/ownership.js";
-import { errorResponse } from "../schemas/common.js";
-import { prayerTimesResponse } from "../schemas/prayer-times.js";
-import { generateBody } from "../schemas/prayer-calculation.js";
+import { errorResponse } from "@qivam/core/schemas/common";
+import { prayerTimesResponse } from "@qivam/core/schemas/prayer-times";
+import { generateBody } from "@qivam/core/schemas/prayer-calculation";
 
 export const prayerCalculationAdminRoutes = new OpenAPIHono<AppEnv>();
 

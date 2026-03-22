@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"]
+  "include": ["api.ts", "types.ts", "middleware", "routes"]
 }

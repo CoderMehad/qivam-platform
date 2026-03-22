@@ -1,10 +1,10 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import * as ApiKey from "@qivam/core/api-key";
 import type { AppEnv } from "../types.js";
-import { requestApiKey, apiKeyResponse, apiKeyStatus } from "../schemas/api-key.js";
-import { errorResponse } from "../schemas/common.js";
-import { sendApiKeyEmail } from "../lib/email.js";
-import { log } from "../lib/logger.js";
+import { requestApiKey, apiKeyResponse, apiKeyStatus } from "@qivam/core/schemas/api-key";
+import { errorResponse } from "@qivam/core/schemas/common";
+import { sendApiKeyEmail } from "@qivam/core/adapters/ses";
+import { log } from "@qivam/core/adapters/logger";
 
 export const apiKeyRoutes = new OpenAPIHono<AppEnv>();
 

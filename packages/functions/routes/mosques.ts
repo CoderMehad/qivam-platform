@@ -8,8 +8,8 @@ import {
   mosqueResponse,
   listQuery,
   nearbyQuery,
-} from "../schemas/mosque.js";
-import { errorResponse, paginationMeta } from "../schemas/common.js";
+} from "@qivam/core/schemas/mosque";
+import { errorResponse, paginationMeta } from "@qivam/core/schemas/common";
 
 export const mosqueRoutes = new OpenAPIHono<AppEnv>();
 

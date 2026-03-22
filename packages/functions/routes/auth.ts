@@ -7,8 +7,8 @@ import {
   tokenResponse,
   inviteSchema,
   inviteResponse,
-} from "../schemas/auth.js";
-import { errorResponse } from "../schemas/common.js";
+} from "@qivam/core/schemas/auth";
+import { errorResponse } from "@qivam/core/schemas/common";
 import { jwtAuth } from "../middleware/admin-auth.js";
 
 export const authRoutes = new OpenAPIHono<AppEnv>();
