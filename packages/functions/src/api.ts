@@ -17,6 +17,8 @@ import { prayerCalculationRoutes, standalonePrayerCalculationRoutes } from "./ro
 import { prayerCalculationAdminRoutes } from "./routes/prayer-calculation-admin.js";
 import { apiKeyRoutes } from "./routes/api-keys.js";
 import { superAdminRoutes } from "./routes/super-admin.js";
+import { analyticsRoutes } from "./routes/analytics.js";
+import { requestAnalytics } from "./middleware/analytics.js";
 import { log } from "./lib/logger.js";
 
 // Bridge SST Config.Secret values into process.env for core layer
@@ -55,18 +57,21 @@ app.onError((err, c) => {
   }
 
   const message = err instanceof Error ? err.message : "Unknown error";
-  log("error", "Unhandled error", { error: message, requestId: reqId });
+  const stack = err instanceof Error ? err.stack : undefined;
+  log("error", "Unhandled error", { error: message, stack, requestId: reqId });
   return c.json({ error: "Internal server error", requestId: reqId }, 500);
 });
 
 // ── Consumer routes (documented in OpenAPI spec) ─────────────────────────────
 
 const consumerApp = new OpenAPIHono<AppEnv>();
+consumerApp.use("*", requestAnalytics);
 consumerApp.route("/mosques", mosqueRoutes);
 consumerApp.route("/mosques", prayerTimesRoutes);
 consumerApp.route("/mosques", prayerCalculationRoutes);
 consumerApp.route("/prayer-times", standalonePrayerCalculationRoutes);
 consumerApp.route("/api-keys", apiKeyRoutes);
+consumerApp.route("/analytics", analyticsRoutes);
 
 consumerApp.doc("/docs/openapi.json", {
   openapi: "3.1.0",
