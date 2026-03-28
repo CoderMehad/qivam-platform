@@ -5,6 +5,7 @@ import {
   calculateForRange,
   calculateQibla,
   resolveMethod,
+  CALCULATION_METHODS,
 } from "@qivam/core/lib/prayer-calculation";
 import type {
   CalculationConfig,
@@ -20,8 +21,11 @@ import {
   mosqueCalculateQuery,
   standaloneCalculateQuery,
   calculatedTimesResponse,
+  calculatedTimesRangeResponse,
+  methodsResponse,
   qiblaResponse,
 } from "@qivam/core/schemas/prayer-calculation";
+import { inferTimezone } from "@qivam/core/shared/helpers";
 
 export const prayerCalculationRoutes = new OpenAPIHono<AppEnv>();
 export const standalonePrayerCalculationRoutes = new OpenAPIHono<AppEnv>();
@@ -106,11 +110,13 @@ prayerCalculationRoutes.openapi(mosqueCalculateRoute, async (c) => {
 
   return c.json({
     date: query.date,
-    ...times,
-    method: method.name,
-    madhab: query.madhab ?? "standard",
-    coordinates: { latitude: mosque.lat, longitude: mosque.lng },
-    timezone: mosque.timezone,
+    prayers: times,
+    meta: {
+      method: method.name,
+      madhab: query.madhab ?? "standard",
+      timezone: mosque.timezone,
+      coordinates: { latitude: mosque.lat, longitude: mosque.lng },
+    },
   }, 200);
 });
 
@@ -154,6 +160,33 @@ prayerCalculationRoutes.openapi(qiblaRoute, async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /v1/prayer-times/methods
+// ---------------------------------------------------------------------------
+
+const methodsRoute = createRoute({
+  method: "get",
+  path: "/methods",
+  middleware: [apiKeyAuth, rateLimiter],
+  request: {},
+  responses: {
+    200: {
+      content: { "application/json": { schema: methodsResponse } },
+      description: "Supported prayer time calculation methods",
+    },
+  },
+});
+
+standalonePrayerCalculationRoutes.openapi(methodsRoute, (c) => {
+  const data = Object.values(CALCULATION_METHODS).map((m) => ({
+    id: m.id,
+    name: m.name,
+    fajrAngle: m.fajrAngle,
+    isha: m.isha,
+  }));
+  return c.json({ data }, 200);
+});
+
+// ---------------------------------------------------------------------------
 // GET /v1/prayer-times/calculate (standalone — no mosque required)
 // ---------------------------------------------------------------------------
 
@@ -166,7 +199,11 @@ const standaloneCalculateRoute = createRoute({
   },
   responses: {
     200: {
-      content: { "application/json": { schema: calculatedTimesResponse } },
+      content: {
+        "application/json": {
+          schema: calculatedTimesRangeResponse.or(calculatedTimesResponse),
+        },
+      },
       description: "Calculated prayer times for given coordinates",
     },
   },
@@ -175,23 +212,42 @@ const standaloneCalculateRoute = createRoute({
 standalonePrayerCalculationRoutes.openapi(standaloneCalculateRoute, async (c) => {
   const query = c.req.valid("query");
 
-  const config = buildConfig(query);
+  const resolvedMethod = query.method ?? "mwl";
+  const resolvedTimezone = query.timezone ?? inferTimezone(query.latitude, query.longitude);
+
+  const config = buildConfig({ ...query, method: resolvedMethod });
   const coords: Coordinates = {
     latitude: query.latitude,
     longitude: query.longitude,
     elevation: query.elevation,
   };
-  const date = parseDate(query.date);
-
-  const times = calculatePrayerTimes(date, coords, config, query.timezone);
-  const method = resolveMethod(config.method as CalculationConfig["method"]);
-
-  return c.json({
-    date: query.date,
-    ...times,
+  const method = resolveMethod(resolvedMethod as CalculationConfig["method"]);
+  const meta = {
     method: method.name,
-    madhab: query.madhab ?? "standard",
+    madhab: (query.madhab ?? "standard") as string,
+    timezone: resolvedTimezone,
     coordinates: { latitude: query.latitude, longitude: query.longitude },
-    timezone: query.timezone,
-  }, 200);
+  };
+
+  if (query.days > 1) {
+    const data = [];
+    const startDate = query.date
+      ? parseDate(query.date)
+      : new Date();
+
+    for (let i = 0; i < query.days; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const times = calculatePrayerTimes(d, coords, config, resolvedTimezone);
+      data.push({ date: dateStr, prayers: times, meta });
+    }
+    return c.json({ data }, 200);
+  }
+
+  const date = query.date ? parseDate(query.date) : new Date();
+  const dateStr = query.date ?? new Date().toISOString().slice(0, 10);
+  const times = calculatePrayerTimes(date, coords, config, resolvedTimezone);
+
+  return c.json({ date: dateStr, prayers: times, meta }, 200);
 });

@@ -6,6 +6,14 @@ import {
   updateApiKeyAnalyticsEnabled,
   listInvitations,
 } from "@qivam/core/repository/drizzle";
+import {
+  updateMosqueVerificationStatus,
+  getMosqueWithAdminEmail,
+} from "@qivam/core/repositories/mosque";
+import {
+  sendMosqueApprovedEmail,
+  sendMosqueRejectedEmail,
+} from "@qivam/core/adapters/ses";
 import { superAdminAuth } from "../middleware/super-admin-auth.js";
 
 export const superAdminRoutes = new Hono<AppEnv>();
@@ -45,6 +53,50 @@ superAdminRoutes.patch("/api-keys/:id/analytics-opt-out", async (c) => {
   const { id } = c.req.param();
   await updateApiKeyAnalyticsEnabled(id, false);
   return c.json({ ok: true }, 200);
+});
+
+// ── Mosques ──────────────────────────────────────────────────────────────────
+
+superAdminRoutes.patch("/mosques/:id/approve", async (c) => {
+  const { id } = c.req.param();
+  const result = await getMosqueWithAdminEmail(id);
+  if (!result) return c.json({ error: "Mosque not found" }, 404);
+
+  const mosque = await updateMosqueVerificationStatus(id, "verified");
+  if (!mosque) return c.json({ error: "Mosque not found" }, 404);
+
+  try {
+    await sendMosqueApprovedEmail({
+      to: result.adminEmail,
+      adminName: result.adminName,
+      mosqueName: result.mosque.name,
+    });
+  } catch {
+    // Email failure should not block the approval
+  }
+
+  return c.json({ ok: true, mosque }, 200);
+});
+
+superAdminRoutes.patch("/mosques/:id/reject", async (c) => {
+  const { id } = c.req.param();
+  const result = await getMosqueWithAdminEmail(id);
+  if (!result) return c.json({ error: "Mosque not found" }, 404);
+
+  const mosque = await updateMosqueVerificationStatus(id, "rejected");
+  if (!mosque) return c.json({ error: "Mosque not found" }, 404);
+
+  try {
+    await sendMosqueRejectedEmail({
+      to: result.adminEmail,
+      adminName: result.adminName,
+      mosqueName: result.mosque.name,
+    });
+  } catch {
+    // Email failure should not block the rejection
+  }
+
+  return c.json({ ok: true, mosque }, 200);
 });
 
 // ── Invitations ─────────────────────────────────────────────────────────────

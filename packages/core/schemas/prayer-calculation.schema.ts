@@ -35,12 +35,17 @@ export const mosqueCalculateQuery = z.object({
 
 /**
  * Query params for standalone calculation (caller provides coordinates).
+ * timezone and method are optional — timezone is inferred from coordinates,
+ * method defaults to MWL.
  */
 export const standaloneCalculateQuery = mosqueCalculateQuery.extend({
+  date: datePattern.optional(),
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
   elevation: z.coerce.number().min(0).max(10000).optional(),
-  timezone: z.string().min(1),
+  timezone: z.string().min(1).optional(),
+  method: methodEnum.optional(),
+  days: z.coerce.number().int().min(1).max(30).optional().default(1),
 });
 
 /**
@@ -60,11 +65,7 @@ export const generateBody = z.object({
   isha_adjustment: z.coerce.number().int().min(-30).max(30).optional(),
 });
 
-/**
- * Response schema for calculated prayer times.
- */
-export const calculatedTimesResponse = z.object({
-  date: z.string(),
+const prayerTimesShape = z.object({
   fajr: z.string(),
   sunrise: z.string(),
   dhuhr: z.string(),
@@ -72,13 +73,47 @@ export const calculatedTimesResponse = z.object({
   maghrib: z.string(),
   isha: z.string(),
   midnight: z.string(),
-  method: z.string(),
-  madhab: z.string(),
-  coordinates: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
+});
+
+/**
+ * Single calculated day response.
+ */
+export const calculatedTimesResponse = z.object({
+  date: z.string(),
+  prayers: prayerTimesShape,
+  meta: z.object({
+    method: z.string(),
+    madhab: z.string(),
+    timezone: z.string(),
+    coordinates: z.object({
+      latitude: z.number(),
+      longitude: z.number(),
+    }),
   }),
-  timezone: z.string(),
+});
+
+/**
+ * Multi-day calculated response (when days > 1).
+ */
+export const calculatedTimesRangeResponse = z.object({
+  data: z.array(calculatedTimesResponse),
+});
+
+/**
+ * Response schema for methods discovery endpoint.
+ */
+export const methodsResponse = z.object({
+  data: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      fajrAngle: z.number(),
+      isha: z.union([
+        z.object({ type: z.literal("angle"), degrees: z.number() }),
+        z.object({ type: z.literal("minutes"), minutes: z.number(), ramadanMinutes: z.number().optional() }),
+      ]),
+    }),
+  ),
 });
 
 /**

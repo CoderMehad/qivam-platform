@@ -21,7 +21,10 @@
     "./schemas/prayer-times": "./schemas/prayer-times.schema.ts",
     "./schemas/prayer-calculation": "./schemas/prayer-calculation.schema.ts",
     "./adapters/ses": "./adapters/ses.adapter.ts",
-    "./adapters/logger": "./adapters/logger.adapter.ts"
+    "./adapters/logger": "./adapters/logger.adapter.ts",
+    "./shared/helpers": "./shared/helpers.ts",
+    "./repositories/mosque": "./repositories/mosque.repository.ts",
+    "./repositories/admin": "./repositories/admin.repository.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1010.0",
@@ -30,6 +33,7 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.1",
     "jose": "5.6.3",
+    "tzlookup": "^1.4.0",
     "zod": "3.23.8"
   },
   "devDependencies": {

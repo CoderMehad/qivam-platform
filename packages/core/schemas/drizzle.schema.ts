@@ -32,6 +32,7 @@ export const mosques = pgTable(
     lng: doublePrecision("lng").notNull(),
     timezone: varchar("timezone", { length: 64 }).notNull().default("UTC"),
     facilities: text("facilities").notNull().default("[]"),
+    verificationStatus: text("verification_status").notNull().default("pending"),
     logoUrl: text("logo_url"),
     coverUrl: text("cover_url"),
     createdAt: timestamp("created_at", { withTimezone: true })

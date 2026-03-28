@@ -8,6 +8,8 @@ export type MosqueFacility =
   | "library"
   | "community_hall";
 
+export type MosqueVerificationStatus = "pending" | "verified" | "rejected";
+
 export interface Mosque {
   id: string;
   slug: string;
@@ -23,6 +25,7 @@ export interface Mosque {
   lng: number;
   timezone: string;
   facilities: MosqueFacility[];
+  verificationStatus: MosqueVerificationStatus;
   logoUrl: string | null;
   coverUrl: string | null;
   createdAt: string;

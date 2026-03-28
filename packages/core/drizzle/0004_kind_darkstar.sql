@@ -1,0 +1,1 @@
+ALTER TABLE "mosques" ADD COLUMN "verification_status" text DEFAULT 'pending' NOT NULL;

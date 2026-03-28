@@ -31,6 +31,17 @@ export async function getAdminByEmail(
   return rows[0] ? mapAdminRow(rows[0]) : undefined;
 }
 
+export async function getAdminById(id: string): Promise<Admin | undefined> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(admins)
+    .where(eq(admins.id, id))
+    .limit(1);
+
+  return rows[0] ? mapAdminRow(rows[0]) : undefined;
+}
+
 export async function insertAdmin(data: {
   email: string;
   name: string;

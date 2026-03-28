@@ -25,6 +25,7 @@ function mapMosqueRow(row: typeof mosques.$inferSelect): Mosque {
     lng: row.lng,
     timezone: row.timezone,
     facilities: JSON.parse(row.facilities) as MosqueFacility[],
+    verificationStatus: (row.verificationStatus ?? "pending") as import("../models/mosque.model.js").MosqueVerificationStatus,
     logoUrl: row.logoUrl ?? null,
     coverUrl: row.coverUrl ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -48,13 +49,13 @@ export async function listMosques(
   const page = Math.max(params.page ?? 1, 1);
   const offset = (page - 1) * limit;
 
-  const conditions = [];
+  const conditions = [eq(mosques.verificationStatus, "verified")];
 
   if (params.city) {
     conditions.push(sql`lower(${mosques.city}) = lower(${params.city})`);
   }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const whereClause = and(...conditions);
 
   const [rows, countResult] = await Promise.all([
     db
@@ -90,14 +91,14 @@ export async function getMosqueByIdOrSlug(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       idOrSlug,
     );
-  const condition = isUuid
+  const idCondition = isUuid
     ? or(eq(mosques.id, idOrSlug), eq(mosques.slug, idOrSlug))
     : eq(mosques.slug, idOrSlug);
 
   const rows = await db
     .select()
     .from(mosques)
-    .where(condition)
+    .where(and(idCondition, eq(mosques.verificationStatus, "verified")))
     .limit(1);
 
   return rows[0] ? mapMosqueRow(rows[0]) : undefined;
@@ -119,11 +120,12 @@ export async function nearbyMosques(
         ST_SetSRID(ST_MakePoint(${mosques.lng}, ${mosques.lat}), 4326)::geography
       ) / 1000.0 AS distance_km
     FROM mosques
-    WHERE ST_DWithin(
-      ST_SetSRID(ST_MakePoint(${mosques.lng}, ${mosques.lat}), 4326)::geography,
-      ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
-      ${radiusMeters}
-    )
+    WHERE verification_status = 'verified'
+      AND ST_DWithin(
+        ST_SetSRID(ST_MakePoint(${mosques.lng}, ${mosques.lat}), 4326)::geography,
+        ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+        ${radiusMeters}
+      )
     ORDER BY distance_km ASC
     LIMIT ${limit}
   `);
@@ -244,4 +246,38 @@ export async function deleteMosque(id: string): Promise<boolean> {
     .returning({ id: mosques.id });
 
   return rows.length > 0;
+}
+
+export async function updateMosqueVerificationStatus(
+  id: string,
+  status: import("../models/mosque.model.js").MosqueVerificationStatus,
+): Promise<Mosque | undefined> {
+  const db = getDb();
+  const rows = await db
+    .update(mosques)
+    .set({ verificationStatus: status, updatedAt: new Date() })
+    .where(eq(mosques.id, id))
+    .returning();
+
+  return rows[0] ? mapMosqueRow(rows[0]) : undefined;
+}
+
+export async function getMosqueWithAdminEmail(
+  mosqueId: string,
+): Promise<{ mosque: Mosque; adminEmail: string; adminName: string } | undefined> {
+  const db = getDb();
+  const { admins } = await import("../schemas/drizzle.schema.js");
+  const rows = await db
+    .select()
+    .from(mosques)
+    .innerJoin(admins, eq(admins.mosqueId, mosques.id))
+    .where(eq(mosques.id, mosqueId))
+    .limit(1);
+
+  if (!rows[0]) return undefined;
+  return {
+    mosque: mapMosqueRow(rows[0].mosques),
+    adminEmail: rows[0].admins.email,
+    adminName: rows[0].admins.name,
+  };
 }
