@@ -117,6 +117,14 @@ export const methodsResponse = z.object({
 });
 
 /**
+ * Query params for standalone qibla endpoint.
+ */
+export const standaloneQiblaQuery = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+});
+
+/**
  * Response schema for qibla.
  */
 export const qiblaResponse = z.object({
