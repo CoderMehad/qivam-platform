@@ -67,6 +67,8 @@ app.onError((err, c) => {
 
 const consumerApp = new OpenAPIHono<AppEnv>();
 consumerApp.use("*", requestAnalytics);
+
+// Developer endpoints (X-API-Key)
 consumerApp.route("/mosques", mosqueRoutes);
 consumerApp.route("/mosques", prayerTimesRoutes);
 consumerApp.route("/mosques", prayerCalculationRoutes);
@@ -74,11 +76,31 @@ consumerApp.route("/prayer-times", standalonePrayerCalculationRoutes);
 consumerApp.route("/api-keys", apiKeyRoutes);
 consumerApp.route("/analytics", analyticsRoutes);
 
+// Mosque admin endpoints (Bearer JWT)
+consumerApp.route("/auth", authRoutes);
+consumerApp.route("/mosques", mosqueAdminRoutes);
+consumerApp.route("/mosques", prayerTimesAdminRoutes);
+consumerApp.route("/mosques", prayerCalculationAdminRoutes);
+
+consumerApp.openAPIRegistry.registerComponent("securitySchemes", "ApiKeyAuth", {
+  type: "apiKey",
+  in: "header",
+  name: "X-API-Key",
+  description: "API key for developer access. Request one at /api-keys/request.",
+});
+
+consumerApp.openAPIRegistry.registerComponent("securitySchemes", "BearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+  description: "JWT token for mosque admin access. Obtain via POST /auth/login.",
+});
+
 consumerApp.doc("/docs/openapi.json", {
   openapi: "3.1.0",
   info: {
     title: "Qivam API",
-    description: "Public API for accessing the mosque directory and prayer times. All endpoints require an API key via the X-API-Key header.",
+    description: "Open infrastructure for Muslim developers — mosque directory, prayer times, and Islamic content.\n\n**Authentication:**\n- Developer endpoints: `X-API-Key` header\n- Mosque admin endpoints: `Authorization: Bearer <token>` (JWT from `/auth/login`)",
     version: "1.0.0",
   },
   servers: [{ url: "/v1" }],
@@ -101,13 +123,7 @@ app.route("/", healthRoutes);
 // Consumer API with docs
 app.route("/v1", consumerApp);
 
-// Admin routes (JWT-protected, not in docs — managed via dashboard)
-app.route("/v1/auth", authRoutes);
-app.route("/v1/mosques", mosqueAdminRoutes);
-app.route("/v1/mosques", prayerTimesAdminRoutes);
-app.route("/v1/mosques", prayerCalculationAdminRoutes);
-
-// Super admin routes — protected by X-Super-Admin-Key header
+// Super admin routes — protected by X-Super-Admin-Key header (not in docs)
 app.route("/v1/super", superAdminRoutes);
 
 export const handler = handle(app);
