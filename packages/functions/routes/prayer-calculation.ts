@@ -20,6 +20,7 @@ import { errorResponse } from "@qivam/core/schemas/common";
 import {
   mosqueCalculateQuery,
   standaloneCalculateQuery,
+  standaloneQiblaQuery,
   calculatedTimesResponse,
   calculatedTimesRangeResponse,
   methodsResponse,
@@ -250,4 +251,29 @@ standalonePrayerCalculationRoutes.openapi(standaloneCalculateRoute, async (c) =>
   const times = calculatePrayerTimes(date, coords, config, resolvedTimezone);
 
   return c.json({ date: dateStr, prayers: times, meta }, 200);
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/prayer-times/qibla (standalone — coordinates provided by caller)
+// ---------------------------------------------------------------------------
+
+const standaloneQiblaRoute = createRoute({
+  method: "get",
+  path: "/qibla",
+  middleware: [apiKeyAuth, rateLimiter, publicCache],
+  request: {
+    query: standaloneQiblaQuery,
+  },
+  responses: {
+    200: {
+      content: { "application/json": { schema: qiblaResponse } },
+      description: "Qibla direction from given coordinates",
+    },
+  },
+});
+
+standalonePrayerCalculationRoutes.openapi(standaloneQiblaRoute, (c) => {
+  const { latitude, longitude } = c.req.valid("query");
+  const result = calculateQibla({ latitude, longitude });
+  return c.json({ ...result, coordinates: { latitude, longitude } }, 200);
 });
