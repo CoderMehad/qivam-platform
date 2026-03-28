@@ -26,6 +26,9 @@ export function MainStack({ stack }: StackContext) {
           SST_STAGE: stack.stage,
         },
         logRetention: "one_month",
+        nodejs: {
+          install: ["tzlookup"],
+        },
       },
       throttle: {
         rate: 100,
