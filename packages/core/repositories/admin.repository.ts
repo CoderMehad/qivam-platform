@@ -11,7 +11,7 @@ function mapAdminRow(row: typeof admins.$inferSelect): Admin {
     email: row.email,
     name: row.name,
     passwordHash: row.passwordHash,
-    mosqueId: row.mosqueId,
+    mosqueId: row.mosqueId ?? null,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -46,7 +46,6 @@ export async function insertAdmin(data: {
   email: string;
   name: string;
   passwordHash: string;
-  mosqueId: string;
 }): Promise<Admin> {
   const db = getDb();
   const rows = await db
@@ -55,9 +54,22 @@ export async function insertAdmin(data: {
       email: data.email,
       name: data.name,
       passwordHash: data.passwordHash,
-      mosqueId: data.mosqueId,
     })
     .returning();
 
   return mapAdminRow(rows[0]);
+}
+
+export async function linkAdminToMosque(
+  adminId: string,
+  mosqueId: string,
+): Promise<Admin | undefined> {
+  const db = getDb();
+  const rows = await db
+    .update(admins)
+    .set({ mosqueId })
+    .where(eq(admins.id, adminId))
+    .returning();
+
+  return rows[0] ? mapAdminRow(rows[0]) : undefined;
 }

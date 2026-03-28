@@ -55,28 +55,9 @@ export const admins = pgTable("admins", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   passwordHash: text("password_hash").notNull(),
-  mosqueId: uuid("mosque_id")
-    .notNull()
-    .references(() => mosques.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-// ── Invitations ─────────────────────────────────────────────────────────────
-
-export const invitations = pgTable("invitations", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  email: varchar("email", { length: 255 }).notNull(),
-  mosqueId: uuid("mosque_id")
-    .notNull()
-    .references(() => mosques.id, { onDelete: "cascade" }),
-  invitedBy: uuid("invited_by")
-    .notNull()
-    .references(() => admins.id, { onDelete: "cascade" }),
-  token: varchar("token", { length: 64 }).notNull().unique(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  usedAt: timestamp("used_at", { withTimezone: true }),
+  mosqueId: uuid("mosque_id").references(() => mosques.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

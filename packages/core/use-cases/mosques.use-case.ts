@@ -1,6 +1,7 @@
 import type { Mosque } from "../models/mosque.model.js";
 import type { PaginatedResult } from "../models/shared.model.js";
 import { MAX_PAGE_SIZE } from "../constants.js";
+import { ConflictError } from "../errors.js";
 import {
   listMosques,
   getMosqueByIdOrSlug as dbGetByIdOrSlug,
@@ -9,6 +10,10 @@ import {
   updateMosque as dbUpdateMosque,
   deleteMosque,
 } from "../repositories/mosque.repository.js";
+import {
+  getAdminById,
+  linkAdminToMosque,
+} from "../repositories/admin.repository.js";
 
 export interface ListParams {
   page?: number;
@@ -73,8 +78,18 @@ export async function nearby(
   return nearbyMosques(params.lat, params.lng, radiusKm, limit);
 }
 
-export async function create(data: CreateMosqueData): Promise<Mosque> {
-  return insertMosque(data);
+export async function create(
+  data: CreateMosqueData,
+  adminId: string,
+): Promise<Mosque> {
+  const admin = await getAdminById(adminId);
+  if (admin?.mosqueId) {
+    throw new ConflictError("You already manage a mosque");
+  }
+
+  const mosque = await insertMosque(data);
+  await linkAdminToMosque(adminId, mosque.id);
+  return mosque;
 }
 
 export async function update(

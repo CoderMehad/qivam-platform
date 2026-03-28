@@ -3,7 +3,7 @@ export interface Admin {
   email: string;
   name: string;
   passwordHash: string;
-  mosqueId: string;
+  mosqueId: string | null;
   createdAt: string;
 }
 
