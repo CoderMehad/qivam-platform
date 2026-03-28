@@ -25,6 +25,7 @@ import { log } from "@qivam/core/adapters/logger";
 process.env.NEON_DATABASE_URL ??= (Config as Record<string, string>).NEON_DATABASE_URL;
 process.env.JWT_SECRET ??= (Config as Record<string, string>).JWT_SECRET;
 process.env.SUPER_ADMIN_KEY ??= (Config as Record<string, string>).SUPER_ADMIN_KEY;
+process.env.SUPER_ADMIN_EMAIL ??= (Config as Record<string, string>).SUPER_ADMIN_EMAIL;
 
 const app = new OpenAPIHono<AppEnv>();
 
