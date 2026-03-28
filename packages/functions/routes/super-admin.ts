@@ -4,7 +4,6 @@ import {
   listAllApiKeys,
   updateApiKeyActive,
   updateApiKeyAnalyticsEnabled,
-  listInvitations,
 } from "@qivam/core/repository/drizzle";
 import {
   updateMosqueVerificationStatus,
@@ -99,11 +98,3 @@ superAdminRoutes.patch("/mosques/:id/reject", async (c) => {
   return c.json({ ok: true, mosque }, 200);
 });
 
-// ── Invitations ─────────────────────────────────────────────────────────────
-
-superAdminRoutes.get("/invitations", async (c) => {
-  const page = Number(c.req.query("page") ?? "1");
-  const limit = Number(c.req.query("limit") ?? "20");
-  const result = await listInvitations({ page, limit });
-  return c.json(result, 200);
-});

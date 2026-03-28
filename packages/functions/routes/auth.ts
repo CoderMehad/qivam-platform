@@ -1,15 +1,12 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { register, login, createInvitation } from "@qivam/core/auth";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { register, login } from "@qivam/core/auth";
 import type { AppEnv } from "../types.js";
 import {
   registerSchema,
   loginSchema,
   tokenResponse,
-  inviteSchema,
-  inviteResponse,
 } from "@qivam/core/schemas/auth";
 import { errorResponse } from "@qivam/core/schemas/common";
-import { jwtAuth } from "../middleware/admin-auth.js";
 
 export const authRoutes = new OpenAPIHono<AppEnv>();
 
@@ -66,37 +63,4 @@ authRoutes.openapi(loginRoute, async (c) => {
     return c.json({ error: "Invalid email or password" }, 401);
   }
   return c.json(result, 200);
-});
-
-// ── Invite ──────────────────────────────────────────────────────────────────
-
-const inviteRoute = createRoute({
-  method: "post",
-  path: "/invite",
-  middleware: [jwtAuth],
-  request: {
-    body: { content: { "application/json": { schema: inviteSchema } } },
-  },
-  responses: {
-    201: {
-      content: { "application/json": { schema: inviteResponse } },
-      description: "Invitation created",
-    },
-    403: {
-      content: { "application/json": { schema: errorResponse } },
-      description: "Not authorized for this mosque",
-    },
-  },
-});
-
-authRoutes.openapi(inviteRoute, async (c) => {
-  const admin = c.get("admin");
-  const { email, mosqueId } = c.req.valid("json");
-
-  if (admin.mosqueId !== mosqueId) {
-    return c.json({ error: "You can only invite admins to your own mosque" }, 403);
-  }
-
-  const invitation = await createInvitation(admin.id, email, mosqueId);
-  return c.json(invitation, 201);
 });

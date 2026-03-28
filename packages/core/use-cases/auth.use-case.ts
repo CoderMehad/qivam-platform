@@ -1,19 +1,12 @@
-import { randomBytes } from "node:crypto";
 import { hash, compare } from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import type { Admin, AdminPublic } from "../models/admin.model.js";
-import type { InvitationPublic } from "../models/invitation.model.js";
 import { BCRYPT_COST, JWT_EXPIRY } from "../constants.js";
 import { BadRequestError, ConflictError } from "../errors.js";
 import {
   getAdminByEmail,
   insertAdmin,
 } from "../repositories/admin.repository.js";
-import {
-  insertInvitation,
-  getInvitationByToken,
-  markInvitationUsed,
-} from "../repositories/invitation.repository.js";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
@@ -28,35 +21,23 @@ function toPublic(admin: Admin): AdminPublic {
   return rest;
 }
 
+function issueToken(adminId: string): Promise<string> {
+  return new SignJWT({ sub: adminId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(JWT_EXPIRY)
+    .sign(getJwtSecret());
+}
+
 export interface RegisterData {
   email: string;
   name: string;
   password: string;
-  mosqueId: string;
-  inviteToken: string;
 }
 
 export async function register(
   data: RegisterData,
 ): Promise<{ token: string; admin: AdminPublic }> {
-  // Validate invitation
-  const invitation = await getInvitationByToken(data.inviteToken);
-  if (!invitation) {
-    throw new BadRequestError("Invalid invitation token");
-  }
-  if (invitation.usedAt) {
-    throw new BadRequestError("Invitation has already been used");
-  }
-  if (new Date(invitation.expiresAt) < new Date()) {
-    throw new BadRequestError("Invitation has expired");
-  }
-  if (invitation.email !== data.email) {
-    throw new BadRequestError("Email does not match invitation");
-  }
-  if (invitation.mosqueId !== data.mosqueId) {
-    throw new BadRequestError("Mosque does not match invitation");
-  }
-
   const existing = await getAdminByEmail(data.email);
   if (existing) {
     throw new ConflictError("Email already registered");
@@ -69,7 +50,6 @@ export async function register(
       email: data.email,
       name: data.name,
       passwordHash,
-      mosqueId: data.mosqueId,
     });
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("unique")) {
@@ -78,15 +58,7 @@ export async function register(
     throw err;
   }
 
-  // Mark invitation as used
-  await markInvitationUsed(invitation.id);
-
-  const token = await new SignJWT({ sub: admin.id, mosqueId: admin.mosqueId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(JWT_EXPIRY)
-    .sign(getJwtSecret());
-
+  const token = await issueToken(admin.id);
   return { token, admin: toPublic(admin) };
 }
 
@@ -100,48 +72,19 @@ export async function login(
   const valid = await compare(password, admin.passwordHash);
   if (!valid) return null;
 
-  const token = await new SignJWT({ sub: admin.id, mosqueId: admin.mosqueId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(JWT_EXPIRY)
-    .sign(getJwtSecret());
-
+  const token = await issueToken(admin.id);
   return { token, admin: toPublic(admin) };
 }
 
 export async function verifyToken(
   token: string,
-): Promise<{ sub: string; mosqueId: string } | null> {
+): Promise<{ sub: string } | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     const sub = payload.sub;
-    const mosqueId = payload.mosqueId as string | undefined;
-    if (!sub || !mosqueId) return null;
-    return { sub, mosqueId };
+    if (!sub) return null;
+    return { sub };
   } catch {
     return null;
   }
-}
-
-const INVITE_EXPIRY_HOURS = 72;
-
-export async function createInvitation(
-  adminId: string,
-  email: string,
-  mosqueId: string,
-): Promise<InvitationPublic> {
-  const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + INVITE_EXPIRY_HOURS);
-
-  const invitation = await insertInvitation({
-    email,
-    mosqueId,
-    invitedBy: adminId,
-    token,
-    expiresAt,
-  });
-
-  const { token: _, ...publicInvitation } = invitation;
-  return publicInvitation;
 }
