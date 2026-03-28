@@ -35,8 +35,10 @@ export const rateLimiter = createMiddleware<AppEnv>(async (c, next) => {
   recent.push(now);
   windows.set(apiKey.id, recent);
 
+  const resetAt = Math.ceil((now + WINDOW_MS) / 1000);
   c.header("X-RateLimit-Limit", String(limit));
   c.header("X-RateLimit-Remaining", String(Math.max(0, limit - recent.length)));
+  c.header("X-RateLimit-Reset", String(resetAt));
 
   await next();
 });

@@ -9,6 +9,9 @@ import {
   mosqueResponse,
 } from "@qivam/core/schemas/mosque";
 import { errorResponse } from "@qivam/core/schemas/common";
+import { sendMosqueSubmissionEmail } from "@qivam/core/adapters/ses";
+import { log } from "@qivam/core/adapters/logger";
+import { getAdminById } from "@qivam/core/repositories/admin";
 
 export const mosqueAdminRoutes = new OpenAPIHono<AppEnv>();
 
@@ -33,7 +36,27 @@ const createMosqueRoute = createRoute({
 
 mosqueAdminRoutes.openapi(createMosqueRoute, async (c) => {
   const data = c.req.valid("json");
+  const admin = c.get("admin");
   const mosque = await Mosque.create(data);
+
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  if (superAdminEmail) {
+    try {
+      const adminRecord = await getAdminById(admin.id);
+      await sendMosqueSubmissionEmail({
+        superAdminEmail,
+        mosqueName: mosque.name,
+        mosqueId: mosque.id,
+        adminEmail: adminRecord?.email ?? admin.id,
+      });
+    } catch (err) {
+      log("error", "Failed to send mosque submission email", {
+        mosqueId: mosque.id,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
+  }
+
   return c.json(mosque, 201);
 });
 

@@ -41,6 +41,9 @@ importers:
       jose:
         specifier: 5.6.3
         version: 5.6.3
+      tzlookup:
+        specifier: ^1.4.0
+        version: 1.4.0
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -3057,6 +3060,9 @@ packages:
     resolution: {integrity: sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  tzlookup@1.4.0:
+    resolution: {integrity: sha512-JIsOUO5HqtJ73KOee87Ui7UunYHq0AXxW2BhqyIZlkxRrBH1bscyVPnO/GspFUJHPBhkml/mTUAZzcBMBNLdQQ==}
 
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
@@ -7400,6 +7406,8 @@ snapshots:
   typedarray@0.0.6: {}
 
   typescript@5.5.4: {}
+
+  tzlookup@1.4.0: {}
 
   undici-types@7.18.2: {}
 

@@ -1,4 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
+
+const _require = createRequire(import.meta.url);
+const tzlookup = _require("tzlookup") as (lat: number, lon: number) => string;
 
 // ── ID & Timestamp ───────────────────────────────────────────────────────────
 
@@ -49,6 +53,15 @@ export function haversineKm(
 
 function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
+}
+
+/** Infer IANA timezone from coordinates. Falls back to "UTC" if lookup fails. */
+export function inferTimezone(lat: number, lng: number): string {
+  try {
+    return tzlookup(lat, lng) ?? "UTC";
+  } catch {
+    return "UTC";
+  }
 }
 
 // ── Crypto ───────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["adapters", "lib", "models", "repositories", "schemas", "shared", "use-cases", "constants.ts", "errors.ts", "drizzle.config.ts"]
+  "include": ["adapters", "lib", "models", "repositories", "schemas", "shared", "use-cases", "types", "constants.ts", "errors.ts", "drizzle.config.ts"]
 }
