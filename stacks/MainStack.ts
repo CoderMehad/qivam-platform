@@ -6,6 +6,8 @@ export function MainStack({ stack }: StackContext) {
   const JWT_SECRET = new Config.Secret(stack, "JWT_SECRET");
   const SUPER_ADMIN_KEY = new Config.Secret(stack, "SUPER_ADMIN_KEY");
   const SUPER_ADMIN_EMAIL = new Config.Secret(stack, "SUPER_ADMIN_EMAIL");
+  const AXIOM_TOKEN = new Config.Secret(stack, "AXIOM_TOKEN");
+  const AXIOM_DATASET = new Config.Secret(stack, "AXIOM_DATASET");
 
   // SES domain identity — only on production (domain identity is a regional singleton;
   // creating it on every stage would conflict with the existing production resource)
@@ -21,7 +23,7 @@ export function MainStack({ stack }: StackContext) {
   const api = new Api(stack, "Api", {
     defaults: {
       function: {
-        bind: [NEON_DATABASE_URL, JWT_SECRET, SUPER_ADMIN_KEY, SUPER_ADMIN_EMAIL],
+        bind: [NEON_DATABASE_URL, JWT_SECRET, SUPER_ADMIN_KEY, SUPER_ADMIN_EMAIL, AXIOM_TOKEN, AXIOM_DATASET],
         environment: {
           SST_STAGE: stack.stage,
         },

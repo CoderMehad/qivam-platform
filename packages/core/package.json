@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1010.0",
+    "@axiomhq/js": "^1.5.0",
     "@hono/zod-openapi": "0.16.0",
     "@neondatabase/serverless": "^0.10.4",
     "bcryptjs": "^3.0.3",

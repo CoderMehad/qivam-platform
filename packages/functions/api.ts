@@ -26,6 +26,8 @@ process.env.NEON_DATABASE_URL ??= (Config as Record<string, string>).NEON_DATABA
 process.env.JWT_SECRET ??= (Config as Record<string, string>).JWT_SECRET;
 process.env.SUPER_ADMIN_KEY ??= (Config as Record<string, string>).SUPER_ADMIN_KEY;
 process.env.SUPER_ADMIN_EMAIL ??= (Config as Record<string, string>).SUPER_ADMIN_EMAIL;
+process.env.AXIOM_TOKEN ??= (Config as Record<string, string>).AXIOM_TOKEN;
+process.env.AXIOM_DATASET ??= (Config as Record<string, string>).AXIOM_DATASET;
 
 const app = new OpenAPIHono<AppEnv>();
 
