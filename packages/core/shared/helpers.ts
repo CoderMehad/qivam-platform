@@ -2,7 +2,16 @@ import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 
 const _require = createRequire(import.meta.url);
-const tzlookup = _require("tzlookup") as (lat: number, lon: number) => string;
+let tzlookup: (lat: number, lon: number) => string;
+try {
+  const _tz = _require("tzlookup");
+  if (typeof _tz === "function") tzlookup = _tz;
+  else if (typeof _tz?.tzNameAt === "function") tzlookup = _tz.tzNameAt;
+  else if (typeof _tz?.default === "function") tzlookup = _tz.default;
+  else tzlookup = () => "UTC";
+} catch {
+  tzlookup = () => "UTC";
+}
 
 // ── ID & Timestamp ───────────────────────────────────────────────────────────
 
